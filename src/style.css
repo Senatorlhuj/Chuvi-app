@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --color-navy-blue: #00022e;
+  --color-golden-brown: #996515;
+  --color-charcoal: #302e2d;
+  --color-pure-gold: #e5b80b;
+  --color-cream: #fdfbd4;
+  --color-bone-white: #f6f4f1;
+}
+::selection {
+  background-color: #996515; 
+  color: #f6f4f1; 
+}
+
+::-moz-selection {
+  background-color: #996515; 
+  color: #f6f4f1; 
+}
+
+::marker{
+  background-color: #996515;
+  color: #996515;
+}
