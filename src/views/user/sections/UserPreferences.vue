@@ -1,13 +1,11 @@
 <template>
   <div class="p-6 md:p-10 max-w-2xl mx-auto text-charcoal">
-    <h2 class="text-3xl font-bold mb-6 text-navy-blue">Laundry Preferences</h2>
-
-    <div
-      class="bg-bone-white text-golden-brown px-4 py-3 rounded-sm mb-6 border border-golden-brown/50"
+    <h2
+      class="text-3xl font-bold mb-6 text-navy-blue"
+      :style="{ fontFamily: 'var(--font-display)' }"
     >
-      <strong>Disclaimer:</strong> Deliveries and services are available
-      <strong>within Anambra state</strong> only.
-    </div>
+      Laundry Preferences
+    </h2>
 
     <form
       @submit.prevent="savePreferences"
@@ -42,13 +40,13 @@
         <label class="block text-sm font-medium mb-1 text-navy-blue"
           >Fragrance</label
         >
-        <select v-model="form.preferences.fragrance" class="input">
-          <option disabled value="">Select fragrance</option>
-          <option>Lavender</option>
-          <option>Rose</option>
-          <option>Vanilla</option>
-          <option>Unscented</option>
-        </select>
+        <CustomSelect
+          v-model="form.preferences.fragrance"
+          :options="fragranceOptions"
+          placeholder="Select fragrance"
+          label="Fragrance Selection"
+          required
+        />
       </div>
 
       <div>
@@ -78,17 +76,23 @@
 
 <script setup>
 import { ref } from "vue";
-// Import Toast composable
+import CustomSelect from "@/components/atoms/CustomSelect.vue";
 import { useToast } from "@/composables/useToast";
 
-// Initialize the Toast
-const toast = useToast();
 
-// import { savePreferences } from '@/services/api.js'
+const toast = useToast();
 
 const saving = ref(false);
 
-// Default form state
+
+const fragranceOptions = [
+  { label: "Lavender", value: "Lavender" },
+  { label: "Rose", value: "Rose" },
+  { label: "Vanilla", value: "Vanilla" },
+  { label: "Unscented", value: "Unscented" },
+];
+
+
 const form = ref({
   preferences: {
     detergent: "Omo",
@@ -99,17 +103,17 @@ const form = ref({
   },
 });
 
-// Fake save function for demo
+
 const savePreferences = async () => {
   saving.value = true;
   try {
-    // await savePreferences(form.value)
+
     console.log("Submitted payload:", form.value);
 
-    // Use toast for success
+
     toast.showSuccess("Laundry preferences saved successfully! 🎉");
   } catch (err) {
-    // Use toast for error
+
     const errorMessage = err.message || "Failed to save preferences";
     toast.showError(errorMessage);
   } finally {
@@ -119,22 +123,34 @@ const savePreferences = async () => {
 </script>
 
 <style scoped>
-/*
-  Custom CSS block for the utility classes and input styles.
-*/
-.bg-bone-white { background-color: var(--color-bone-white); }
-.bg-bone-white { background-color: var(--color-bone-white); }
-.bg-navy-blue { background-color: var(--color-navy-blue); }
-.bg-golden-brown { background-color: var(--color-golden-brown); }
 
-.text-navy-blue { color: var(--color-navy-blue); }
-.text-charcoal { color: var(--color-charcoal); }
-.text-golden-brown { color: var(--color-golden-brown); }
-.text-bone-white { color: var(--color-bone-white); }
-.text-pure-gold { color: var(--color-pure-gold); }
+.bg-bone-white {
+  background-color: var(--color-bone-white);
+}
+.bg-navy-blue {
+  background-color: var(--color-navy-blue);
+}
+.bg-golden-brown {
+  background-color: var(--color-golden-brown);
+}
+
+.text-navy-blue {
+  color: var(--color-navy-blue);
+}
+.text-charcoal {
+  color: var(--color-charcoal);
+}
+.text-golden-brown {
+  color: var(--color-golden-brown);
+}
+.text-bone-white {
+  color: var(--color-bone-white);
+}
+.text-pure-gold {
+  color: var(--color-pure-gold);
+}
 
 
-/* Input Field Styling */
 .input {
   width: 100%;
   border: 1px solid var(--color-charcoal, #302e2d);
@@ -142,53 +158,59 @@ const savePreferences = async () => {
   padding: 0.5rem 0.75rem;
   outline: none;
   transition: box-shadow 0.2s, border-color 0.2s;
-  background-color: white;
-  
-  /* ADDED: Use Charcoal for input text color */
+  background-color: var(--color-bone-white);
   color: var(--color-charcoal);
 }
 
-/* ADDED: Custom style for the placeholder text */
 .input::placeholder {
-  color: var(--color-charcoal, #302e2d);
-  opacity: 0.7; /* Muted placeholder color */
+  color: var(--color-charcoal);
+  opacity: 0.7; 
 }
 
 .input:focus {
-  /* Use Pure Gold for the focus ring for a premium, accessible highlight */
-  box-shadow: 0 0 0 2px var(--color-pure-gold);
-  border-color: var(--color-pure-gold);
+  border-color: var(--color-golden-brown);
 }
 
-/* Custom Checkbox Styling */
-/* Replaces the default Tailwind blue checkbox */
+
 .custom-checkbox {
-  /* Hide default checkbox */
   -webkit-appearance: none;
   appearance: none;
-  /* Size and shape */
+
   width: 1.25rem;
   height: 1.25rem;
-  border: 2px solid var(--color-navy-blue);
+  border: 2px solid var(--color-charcoal); /* Border with charcoal */
   border-radius: 0.25rem;
   cursor: pointer;
   position: relative;
   transition: background-color 0.2s, border-color 0.2s;
+  background-color: var(--color-bone-white);
 }
 
-/* Checkbox Checked State */
+/* Checkbox Checked State: Use Golden Brown */
 .custom-checkbox:checked {
-  background-color: var(--color-navy-blue);
-  border-color: var(--color-navy-blue);
+  background-color: var(
+    --color-golden-brown
+  ); /* Fill with golden brown when checked */
+  border-color: var(--color-golden-brown);
 }
 
-/* Custom Checkmark (using Pure Gold) */
+/* Custom Checkmark (White checkmark on Golden Brown background) */
 .custom-checkbox:checked::after {
-  content: '\2713'; /* Checkmark symbol */
-  font-size: 1rem;
-  color: var(--color-pure-gold); /* Pure Gold checkmark */
+  content: "";
   position: absolute;
-  top: -1px;
-  left: 2px;
+  /* Checkmark SVG Path (adjusted for size) */
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 00-1.414 0L7 8.586 4.207 5.793a1 1 0 00-1.414 1.414l3.5 3.5a1 1 0 001.414 0l5-5a1 1 0 000-1.414z'/%3e%3c/svg%3e");
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Focus state using Pure Gold */
+.custom-checkbox:focus {
+  outline: none;
 }
 </style>

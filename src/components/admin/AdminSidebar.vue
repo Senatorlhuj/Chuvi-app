@@ -34,13 +34,23 @@
         name="Update Order Status"
         :to="{ name: 'AdminOrderStatusUpdate' }"
       />
+      <SidebarLink
+        icon="fa-solid fa-star"
+        name="All Reviews"
+        :to="{ name: 'AdminReviewsManager' }"
+      />
+      <SidebarLink
+        icon="fa-solid fa-exclamation-triangle"
+        name="All Issues"
+        :to="{ name: 'AdminIssues' }"
+      />
 
       <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
         System
       </h3>
       <SidebarLink
         icon="fa-solid fa-gear"
-        name="Service Config"
+        name="Default Config"
         :to="{ name: 'AdminServiceConfig' }"
       />
     </nav>
@@ -95,13 +105,19 @@
         :to="{ name: 'AdminOrderStatusUpdate' }"
         @click="$emit('closeSidebar')"
       />
+      <SidebarLink
+        icon="fa-solid fa-star"
+        name="AdminReviewsManager"
+        :to="{ name: 'AdminReviewsManager' }"
+        @click="$emit('closeSidebar')"
+      />
 
       <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
         System
       </h3>
       <SidebarLink
         icon="fa-solid fa-gear"
-        name="Service Config"
+        name="Default Config"
         :to="{ name: 'AdminServiceConfig' }"
         @click="$emit('closeSidebar')"
       />

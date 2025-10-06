@@ -4,7 +4,7 @@
   >
     <!-- Logo/Branding for Desktop -->
     <div
-      class="hidden md:block pb-6 mb-6 border-b border-golden-brown/50 flex items-center justify-center"
+      class="hidden md:block pb-6 mb-6 border-b border-golden-brown/50 items-center justify-center"
     >
       <router-link :to="{ name: 'Home' }">
         <img src="@/assets/images/logo/chuvi-logo.png" alt="brand Logo" class="h-10 w-auto" />
@@ -57,14 +57,14 @@
           class="flex items-center p-3 rounded-xl transition-all duration-200 ease-in-out"
           :class="[
             $route.name === 'BookPickup'
-              ? 'bg-pure-gold text-navy-blue font-semibold shadow-lg transform translate-x-1'
-              : 'text-bone-white hover:bg-pure-gold/20 hover:text-pure-gold',
+              ? 'bg-golden-brown text-bone-white font-semibold transform translate-x-1'
+              : 'text-bone-white',
           ]"
         >
           <font-awesome-icon
             icon="calendar-plus"
-            class="w-5 h-5 mr-3 text-pure-gold"
-            :class="{ '!text-navy-blue': $route.name === 'BookPickup' }"
+            class="w-5 h-5 mr-3"
+            :class="{ '!text-bone-white': $route.name === 'BookPickup' }"
           />
           <span class="text-base">Book New Pickup</span>
         </router-link>
@@ -90,13 +90,13 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
 import { useToast } from "@/composables/useToast";
-import { defineEmits } from "vue"; // FontAwesome is already registered globally in main.js
+import { defineEmits } from "vue"; 
 
-// router + route instances
+
 const router = useRouter();
 const route = useRoute();
 
-// toast composable
+
 const { showSuccess } = useToast();
 
 // navigation items

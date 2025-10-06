@@ -4,6 +4,14 @@
       Coupon Manager
     </h2>
 
+    <div v-if="loading" class="text-center p-12 text-golden-brown">
+      <font-awesome-icon
+        icon="fa-solid fa-spinner"
+        class="fa-spin text-4xl mb-2"
+      />
+      <p class="text-lg">Loading coupons...</p>
+    </div>
+
     <div
       v-if="couponToDeleteId"
       class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -304,24 +312,24 @@ const { showSuccess, showError } = useToast();
 // --- UTILITY: CODE GENERATION ---
 // --- UTILITY: CODE GENERATION (UPDATED) ---
 const generateRandomCode = (length = 25) => {
-    // Character set: Uppercase A-Z, Digits 0-9, and symbols @ and -
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@-'; 
-    let result = '';
-    
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    // Ensure the output is fully uppercase (for redundancy/safety, though the source string is uppercase)
-    return result.toUpperCase(); 
+  // Character set: Uppercase A-Z, Digits 0-9, and symbols @ and -
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@-";
+  let result = "";
+
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  // Ensure the output is fully uppercase (for redundancy/safety, though the source string is uppercase)
+  return result.toUpperCase();
 };
 
 // --- HANDLERS FOR UI ---
 const handleGenerateCode = () => {
-    if (isEditing.value) return;
-    const newCode = generateRandomCode(); // Uses the default length of 25
-    couponData.value.couponCode = newCode;
-    showSuccess(`Generated 25-character code: ${newCode}`);
+  if (isEditing.value) return;
+  const newCode = generateRandomCode(); // Uses the default length of 25
+  couponData.value.couponCode = newCode;
+  showSuccess(`Generated 25-character code: ${newCode}`);
 };
 
 // ... (rest of the script remains the same)

@@ -44,12 +44,8 @@ import {
   faDollarSign,
   faPenToSquare,
   faXmark,
-  // Icons reported in error logs
   faCheckCircle,
   faSignOutAlt,
-
-  // Icons used in the UserDashboardLayout for the sidebar
-
   faMapMarkerAlt,
   faCog,
   faCrown,
@@ -57,7 +53,12 @@ import {
   faTachometerAlt,    
   faMapMarkedAlt,   
   faWallet,         
-  faCalendarPlus    
+  faCalendarPlus,
+  faTriangleExclamation,
+  faCommentDots, 
+  faStarHalfStroke,
+  faStar,
+  faExclamationTriangle, faPlus, faSearch
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -112,12 +113,8 @@ library.add(
   faPenToSquare,
   faHouse,
   faXmark,
-  // Icons reported in error logs
   faCheckCircle,
   faSignOutAlt,
-
-  // Icons used in the UserDashboardLayout for the sidebar
-
   faMapMarkerAlt,
   faCog,
   faCrown,
@@ -125,7 +122,12 @@ library.add(
   faTachometerAlt,    
   faMapMarkedAlt,   
   faWallet,         
-  faCalendarPlus    
+  faCalendarPlus,
+  faTriangleExclamation,
+  faCommentDots, 
+  faStarHalfStroke,
+  faStar,
+  faExclamationTriangle, faPlus, faSearch        
 );
 
 const app = createApp(App);

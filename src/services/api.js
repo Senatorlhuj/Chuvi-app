@@ -1,19 +1,10 @@
-// api.js
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-// Fixed USER_BASE_PATH to 'api/users/me'
 const USER_BASE_PATH = 'api/users/me';
 
-/**
- * Fetches the correct authentication token based on the endpoint being accessed.
- * @param {string} endpoint - The API endpoint being called.
- * @returns {string} The stored JWT token or an empty string.
- */
 function getAuthToken(endpoint) {
     if (endpoint.startsWith('api/admin')) {
         return localStorage.getItem('adminToken');
     }
-    // Default to user token for all other routes
     return localStorage.getItem('userToken');
 }
 
@@ -35,7 +26,6 @@ async function authorizedFetch(endpoint, options = {}) {
     });
 
     if (!response.ok) {
-        // Attempt to parse error body for message
         const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
         throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
     }
@@ -44,8 +34,6 @@ async function authorizedFetch(endpoint, options = {}) {
     if (contentType && contentType.includes("application/json")) {
         return response.json();
     }
-
-    // Return null for successful responses without content (e.g., 204 No Content)
     return null;
 }
 
@@ -157,8 +145,18 @@ export async function leaveMembership() {
         method: 'POST'
     });
 }
+//REFERRALS
+export async function getReferralInfo() {
+    return authorizedFetch('api/users/refer', {
+      method: 'GET',
+    });
+  }
+  
 
-// ORDERS
+// ====================================================================
+// ORDERS (USER)
+// ====================================================================
+
 export async function createOrder(orderData) {
     return authorizedFetch('api/orders', {
         method: 'POST',
@@ -172,15 +170,52 @@ export async function getUserOrders(phone) {
     });
 }
 
-// REFERRALS
-export async function getReferralInfo() {
-    return authorizedFetch('api/users/refer', {
+// 🆕 NEW: Fetch a single order by its ID
+export async function getOrderById(orderId) {
+    return authorizedFetch(`api/orders/${orderId}`, {
         method: 'GET'
     });
 }
 
+export async function cancelUserOrder(orderId, noteData = {}) {
+    return authorizedFetch(`api/orders/${orderId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify(noteData)
+    });
+}
+export async function getAllServicesCatalog() {
+    const data = await authorizedFetch('api/services', { method: 'GET' });
+    return data; 
+}
+
 // ====================================================================
-// ADMIN ENDPOINTS
+// ORDERS (ADMIN)
+// ====================================================================
+
+export async function getAllOrdersAdmin() {
+    return authorizedFetch('api/admin/orders', { method: 'GET' });
+}
+
+export async function getOrdersTotalAdmin() {
+    return authorizedFetch('api/admin/orders/total', { method: 'GET' });
+}
+
+export async function adminUpdateOrderStatus(orderId, statusData) {
+    return authorizedFetch(`api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify(statusData)
+    });
+}
+
+export async function adminCancelOrder(orderId, noteData = {}) {
+    return authorizedFetch(`api/admin/orders/${orderId}/cancel`, {
+        method: 'PATCH',
+        body: JSON.stringify(noteData)
+    });
+}
+
+// ====================================================================
+// ADMIN AUTH / EMPLOYEES / COUPONS / SERVICES / CONFIG
 // ====================================================================
 
 export async function adminLogin(credentials) {
@@ -201,10 +236,6 @@ export async function getEmployees() {
 
 export async function deleteEmployee(id) {
     return authorizedFetch(`api/admin/employees/${id}`, { method: 'DELETE' });
-}
-
-export async function updateOrderStatus(orderId, newStatusData) {
-    return authorizedFetch(`api/admin/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify(newStatusData) });
 }
 
 // Coupons
@@ -311,3 +342,29 @@ export async function updateServicePricing(pricingId, pricingData) {
 export async function deleteServicePricing(pricingId) {
     return authorizedFetch(`api/admin/service-pricings/${pricingId}`, { method: 'DELETE' });
 }
+
+// Reviews
+export async function getReviewSummary() {
+    return authorizedFetch('api/admin/reviews/summary', { method: 'GET' });
+}
+
+export async function getAdminAllReviews() {
+    return authorizedFetch('api/admin/reviews/', { method: 'GET' });
+}
+
+// ====================================================================
+// ISSUES (ADMIN)
+// ====================================================================
+
+export const getIssues = async () => {
+    const data = await authorizedFetch('api/admin/issues', { method: 'GET' });
+    return data.issues; 
+};
+
+export const updateIssue = async (id, payload) => {
+    const data = await authorizedFetch(`api/admin/issues/${id}`, { 
+        method: 'PATCH',
+        body: JSON.stringify(payload) 
+    });
+    return data.issue; 
+};

@@ -7,6 +7,8 @@ import AdminDashboard from '@/views/admin/AdminDashboard.vue'; // Already exists
 import EmployeeCreate from '@/views/admin/EmployeeCreate.vue'; // Component created earlier
 import CouponManager from '@/views/admin/CouponManager.vue'; // Component created earlier
 import OrderUpdateStatus from '@/views/admin/OrderUpdateStatus.vue'
+import AdminReviewsManager from '@/views/admin/AdminReviewsManager.vue'
+import AdminIssues from '@/views/admin/AdminIssues.vue'
 
 // Import Layout Components
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -112,6 +114,8 @@ const routes = [
       { path: 'employees/create', name: 'AdminEmployeeCreate', component: EmployeeCreate, meta: { requiresAuth: true, requiresAdmin: true } },
       { path: 'coupons', name: 'AdminCouponManager', component: CouponManager, meta: { requiresAuth: true, requiresAdmin: true } },
       { path: 'orders/status-update', name: 'AdminOrderStatusUpdate', component: OrderUpdateStatus, meta: { requiresAuth: true, requiresAdmin: true } },
+      { path: 'reviews/all-reviews', name: 'AdminReviewsManager', component: AdminReviewsManager, meta: { requiresAuth: true, requiresAdmin: true } },
+      { path: 'issues/all-issues', name: 'AdminIssues', component: AdminIssues, meta: { requiresAuth: true, requiresAdmin: true } },
 
       // Placeholder for future config
       { path: 'services/config', name: 'AdminServiceConfig', component: () => import('@/views/admin/ServiceConfig.vue'), meta: { requiresAuth: true, requiresAdmin: true } },

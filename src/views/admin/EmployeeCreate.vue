@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6  min-h-[80vh]">
+  <div class="p-6 min-h-[80vh]">
     <h2 class="text-3xl font-bold text-navy-blue mb-6 border-b pb-2">
       Manage Employees
     </h2>
@@ -23,6 +23,14 @@
           type="tel"
           v-model="employeeData.phone"
           placeholder="e.g., 07082713287"
+          required
+        />
+
+        <FormField
+          label="Work Role"
+          type="text"
+          v-model="employeeData.workRole"
+          placeholder="e.g., Manager, Cashier, Driver"
           required
         />
 
@@ -51,26 +59,48 @@
         No employees found.
       </p>
 
-      <div v-else class="bg-bone-white p-6 rounded-xl bg-white">
+      <div v-else class="bg-bone-white p-6 rounded-xl overflow-x-auto">
         <div
-          class="grid grid-cols-4 gap-4 p-2 text-sm font-bold border-b-2 border-charcoal/50 mb-2 text-navy-blue"
+          class="grid grid-cols-6 gap-4 p-2 text-sm font-bold border-b-2 border-charcoal/50 mb-2 text-navy-blue min-w-[1000px]"
         >
           <span>Employee Name</span>
           <span>Phone Number</span>
           <span>Employee ID</span>
+          <span>Work Role</span> 
+          <span>Default Password</span> 
           <span class="text-right">Actions</span>
         </div>
 
         <div
           v-for="employee in employees"
           :key="employee._id"
-          class="grid grid-cols-4 gap-4 items-center p-2 text-sm font-semibold text-charcoal even:bg-cream rounded-md"
+          class="grid grid-cols-6 gap-4 items-center p-2 text-sm font-semibold text-charcoal even:bg-cream rounded-md min-w-[1000px]"
         >
           <span class="truncate">{{ employee.fullName }}</span>
           <span class="truncate">{{ employee.phone }}</span>
           <code class="truncate font-mono text-xs text-charcoal">{{
             employee._id
           }}</code>
+          
+          <span class="truncate">{{ employee.workRole || 'N/A' }}</span>
+
+          <div class="flex items-center space-x-2">
+            <code
+              class="truncate font-mono text-xs text-charcoal flex-1"
+              title="Default Password for New Account"
+            >
+              {{ employee.defaultPassword || "N/A" }}
+            </code>
+            <button
+              @click="handleCopyPassword(employee.defaultPassword)"
+              class="text-golden-brown hover:text-pure-gold transition-colors text-sm cursor-pointer"
+              :disabled="!employee.defaultPassword"
+              title="Copy Default Password"
+            >
+              <font-awesome-icon icon="fa-solid fa-copy" />
+            </button>
+          </div>
+
           <div class="flex justify-end">
             <button
               @click="prepareDelete(employee._id, employee.fullName)"
@@ -84,17 +114,16 @@
         </div>
       </div>
     </div>
-    
+
     <div
       v-if="employeeToDeleteId"
       class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
     >
       <div class="bg-bone-white p-6 rounded-lg max-w-sm w-full">
-        <h3 class="text-xl font-bold text-red-700 mb-3">
-          Confirm Deletion
-        </h3>
+        <h3 class="text-xl font-bold text-red-700 mb-3">Confirm Deletion</h3>
         <p class="text-charcoal mb-4">
-          Are you sure you want to remove **{{ employeeToDeleteName }}**? This action cannot be undone.
+          Are you sure you want to remove **{{ employeeToDeleteName }}**? This
+          action cannot be undone.
         </p>
         <div class="flex justify-end space-x-3">
           <button
@@ -113,16 +142,24 @@
         </div>
       </div>
     </div>
-    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import FormField from "@/components/atoms/FormField.vue";
-// NOTE: Now importing the new deleteEmployee function
-import { createEmployee, getEmployees, deleteEmployee } from "@/services/api.js"; 
+import {
+  createEmployee,
+  getEmployees,
+  deleteEmployee,
+} from "@/services/api.js";
 import { useToast } from "@/composables/useToast";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"; // <-- Ensure this is imported for the icon
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faCopy, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"; 
+
+// Add necessary icons to the library locally
+library.add(faCopy, faTrash);
 
 const { showSuccess, showError } = useToast();
 
@@ -130,6 +167,7 @@ const { showSuccess, showError } = useToast();
 const employeeData = ref({
   phone: "",
   fullName: "",
+  workRole: "", 
 });
 
 const employees = ref([]);
@@ -138,99 +176,136 @@ const loading = ref(false);
 
 // State for Delete Confirmation Modal
 const employeeToDeleteId = ref(null);
-const employeeToDeleteName = ref('');
+const employeeToDeleteName = ref("");
 
-// --- DELETE HANDLERS ---
+// --- HANDLERS ---
+
+/**
+ * Copies the provided string (default password) to the clipboard and shows a toast.
+ * @param {string} textToCopy The string to copy.
+ */
+const handleCopyPassword = async (textToCopy) => {
+  if (!textToCopy || textToCopy === 'N/A' || textToCopy === 'Password Hidden') {
+    showError("Cannot copy. Password is not available or hidden.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+    showSuccess(`Copied password to clipboard!`);
+  } catch (err) {
+    console.error("Failed to copy text: ", err);
+    showError("Failed to copy password. Check browser permissions.");
+  }
+};
 
 const prepareDelete = (id, fullName) => {
-    employeeToDeleteId.value = id;
-    employeeToDeleteName.value = fullName;
+  employeeToDeleteId.value = id;
+  employeeToDeleteName.value = fullName;
 };
 
 const cancelDelete = () => {
-    employeeToDeleteId.value = null;
-    employeeToDeleteName.value = '';
+  employeeToDeleteId.value = null;
+  employeeToDeleteName.value = "";
 };
 
 const handleDeleteConfirm = async () => {
-    const id = employeeToDeleteId.value;
-    const name = employeeToDeleteName.value;
-    
-    if (!id) return;
-    
-    loading.value = true;
-    cancelDelete(); // Close modal immediately
+  const id = employeeToDeleteId.value;
+  const name = employeeToDeleteName.value;
 
+  if (!id) return;
+
+  loading.value = true;
+  cancelDelete(); // Close modal immediately
+
+  try {
+    await deleteEmployee(id);
+
+    // Remove from local list to update UI instantly
+    employees.value = employees.value.filter((emp) => emp._id !== id);
+
+    showSuccess(`Employee **${name}** removed successfully.`);
+  } catch (err) {
+    console.error("Employee deletion error:", err);
+    let apiError = "An unknown server error occurred.";
     try {
-        await deleteEmployee(id);
-        
-        // Remove from local list to update UI instantly
-        employees.value = employees.value.filter(emp => emp._id !== id);
-        
-        showSuccess(`Employee **${name}** removed successfully.`);
-    } catch (err) {
-        console.error("Employee deletion error:", err);
-        let apiError = 'An unknown server error occurred.';
-        try {
-            const parsed = JSON.parse(err.message);
-            apiError = parsed.message || parsed.error || err.message;
-        } catch (e) {
-            apiError = err.message || apiError;
-        }
-        showError(`Deletion Failed: ${apiError}`);
-    } finally {
-        loading.value = false;
+      const parsed = JSON.parse(err.message);
+      apiError = parsed.message || parsed.error || err.message;
+    } catch (e) {
+      apiError = err.message || apiError;
     }
+    showError(`Deletion Failed: ${apiError}`);
+  } finally {
+    loading.value = false;
+  }
 };
-
 
 // --- API FUNCTIONS ---
 
 // 1. Fetch Existing Employees on Component Load
 const fetchEmployees = async () => {
-    loadingEmployees.value = true;
-    try {
-        const response = await getEmployees();
-        // Simplified response handling: ensure it's an array
-        const list = Array.isArray(response) ? response : (response && Array.isArray(response.employees) ? response.employees : []);
-        employees.value = list;
-
-    } catch (err) {
-        console.error("Failed to fetch employees:", err);
-        showError("Failed to load employee data.");
-    } finally {
-        loadingEmployees.value = false;
-    }
+  loadingEmployees.value = true;
+  try {
+    const response = await getEmployees();
+    
+    const list = Array.isArray(response)
+      ? response
+      : response && Array.isArray(response.employees)
+      ? response.employees
+      : [];
+      
+    // IMPORTANT: When fetching existing employees, the plain text password is typically NOT returned.
+    // We map the list to ensure that if `defaultPassword` is missing, we use a clear message.
+    employees.value = list.map(emp => ({
+        ...emp,
+        // If the backend returns the password, show it. Otherwise, show 'Password Hidden'.
+        defaultPassword: emp.defaultPassword || 'Password Hidden', 
+    }));
+  } catch (err) {
+    console.error("Failed to fetch employees:", err);
+    showError("Failed to load employee data.");
+  } finally {
+    loadingEmployees.value = false;
+  }
 };
 
 // 2. Handle Creation of a New Employee
 const handleCreateEmployee = async () => {
-    loading.value = true;
-    try {
-        const response = await createEmployee(employeeData.value);
-        if (response && response._id && response.fullName) {
-            employees.value.unshift(response);
-            showSuccess(`Employee **${response.fullName}** added successfully!`);
-            
-            // Clear the form
-            employeeData.value.phone = "";
-            employeeData.value.fullName = "";
-        } else {
-            showError("Employee created, but the server response was incomplete.");
-        }
-    } catch (err) {
-        console.error("Employee creation error:", err);
-        let apiError = err.message || "An unknown error occurred.";
-        try {
-            const parsed = JSON.parse(err.message);
-            apiError = parsed.message || parsed.error || err.message;
-        } catch (e) {
-            // Fallback to raw message
-        }
-        showError(`Creation Failed: ${apiError}`);
-    } finally {
-        loading.value = false;
+  loading.value = true;
+  try {
+    const response = await createEmployee(employeeData.value);
+    
+    if (response && response.user && response.user._id && response.user.fullName) {
+      
+      const newEmployee = {
+        ...response.user,
+        // This captures the actual password returned ONLY at creation time.
+        defaultPassword: response.defaultPassword, 
+      };
+
+      employees.value.unshift(newEmployee);
+      showSuccess(`Employee **${newEmployee.fullName}** added successfully! Default Password: **${response.defaultPassword}**`);
+
+      // Clear the form fields
+      employeeData.value.phone = "";
+      employeeData.value.fullName = "";
+      employeeData.value.workRole = "";
+      
+    } else {
+      showError("Employee created, but the server response was incomplete.");
     }
+  } catch (err) {
+    console.error("Employee creation error:", err);
+    let apiError = err.message || "An unknown error occurred.";
+    try {
+      const parsed = JSON.parse(err.message);
+      apiError = parsed.message || parsed.error || err.message;
+    } catch (e) {
+      // Fallback to raw message
+    }
+    showError(`Creation Failed: ${apiError}`);
+  } finally {
+    loading.value = false;
+  }
 };
 
 // --- LIFECYCLE HOOK ---
