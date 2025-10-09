@@ -29,9 +29,9 @@ const copyToClipboard = async (text, type) => {
 
 <template>
   <div
-    class="flex flex-col items-center justify-center min-h-screen p-6"
+    class="flex flex-col items-center justify-center  p-6"
   >
-    <div class="bg-bone-white rounded-2xl p-8 w-full max-w-sm text-center">
+    <div class="bg-bone-white rounded-2xl mt-14 p-8 w-full max-w-sm text-center">
       <h1 class="text-xl font-semibold mb-6">Invite Friends</h1>
 
       <!-- QR Code -->

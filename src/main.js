@@ -4,8 +4,9 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import { Form, Field, ErrorMessage } from 'vee-validate';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// --- Font Awesome Imports ---
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
@@ -58,7 +59,7 @@ import {
   faCommentDots, 
   faStarHalfStroke,
   faStar,
-  faExclamationTriangle, faPlus, faSearch
+  faExclamationTriangle, faPlus, faSearch, faLink, faBell
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -67,12 +68,11 @@ import {
   faTiktok
 } from '@fortawesome/free-brands-svg-icons';
 
-// --- Swiper Imports (CSS and Components) ---
+
 import 'swiper/css';
-import 'swiper/css/pagination'; // Only import the CSS for modules you are using
+import 'swiper/css/pagination'; 
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
-// Add only the specific icons you need to the library
 library.add(
   faPhoneVolume,
   faEnvelope,
@@ -127,22 +127,19 @@ library.add(
   faCommentDots, 
   faStarHalfStroke,
   faStar,
-  faExclamationTriangle, faPlus, faSearch        
+  faExclamationTriangle, faPlus, faSearch, faLink, faBell        
 );
-
+gsap.registerPlugin(ScrollTrigger);
 const app = createApp(App);
-
+app.config.globalProperties.$gsap = gsap;
+app.config.globalProperties.$ScrollTrigger = ScrollTrigger;
 app.use(createPinia());
 app.use(router);
 
 app.component('VeeForm', Form);
 app.component('VeeField', Field);
 app.component('VeeErrorMessage', ErrorMessage);
-
-// Register Font Awesome component globally
 app.component('font-awesome-icon', FontAwesomeIcon);
-
-// Register Swiper components globally
 app.component('Swiper', Swiper);
 app.component('SwiperSlide', SwiperSlide);
 

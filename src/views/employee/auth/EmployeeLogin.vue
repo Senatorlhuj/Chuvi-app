@@ -1,12 +1,9 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen  p-4">
-    <div
-      class="w-full max-w-lg  p-8"
-    >
-      <!-- Logo Section -->
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-lg p-8">
+      <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-block bg-navy-blue rounded-full p-3 shadow-lg">
-          <!-- Using an image from your provided template -->
           <img
             src="@/assets/images/logo/chuvi-logo-icon.png"
             alt="Chuvi Brand Logo"
@@ -14,7 +11,7 @@
           />
         </div>
       </div>
-      
+
       <!-- Titles -->
       <h2
         class="text-3xl font-bold text-navy-blue text-center mb-2"
@@ -23,7 +20,7 @@
         Welcome Back!
       </h2>
       <p class="text-center text-charcoal mb-4">
-        Log in to access your <span class="text-golden-brown font-bold">Chuvi</span> account.
+        Log in to your <span class="text-golden-brown font-bold">Employee</span> account.
       </p>
 
       <!-- Login Form -->
@@ -44,15 +41,6 @@
           required
         />
 
-        <div class="text-right pt-1">
-          <router-link
-            :to="{ name: 'ResetPassword' }"
-            class="text-golden-brown hover:underline text-sm font-medium"
-          >
-            Forgot Password?
-          </router-link>
-        </div>
-
         <button
           type="submit"
           :disabled="loading"
@@ -61,17 +49,6 @@
           {{ loading ? "Logging In..." : "Log In" }}
         </button>
       </form>
-
-      <!-- Register Link -->
-      <div class="mt-6 text-center text-charcoal">
-        Don't have an account?
-        <router-link
-          :to="{ name: 'Register' }"
-          class="text-golden-brown hover:underline font-medium"
-        >
-          Sign Up
-        </router-link>
-      </div>
     </div>
   </div>
 </template>
@@ -80,42 +57,41 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import FormField from "@/components/atoms/FormField.vue";
-import { login } from "@/services/api.js";
+import { employeeLogin } from "@/services/api.js"; 
 import { useToast } from "@/composables/useToast";
 
 const { showSuccess, showError } = useToast();
 const router = useRouter();
-const initialCredentials = {
+
+// --- STATE ---
+const credentials = ref({
   phone: "",
   password: "",
-};
-const credentials = ref({ ...initialCredentials });
+});
 const loading = ref(false);
+
+// --- LOGIN HANDLER ---
 const handleLogin = async () => {
   loading.value = true;
 
   try {
-    const response = await login(credentials.value);
+    const response = await employeeLogin(credentials.value);
 
-    if (response && response.token) {
-      showSuccess(`Welcome back! You are now logged in.`);
-      
-      localStorage.setItem('userToken', response.token); 
-      router.push({ name: 'BookPickup' }); 
-      
+    if (response && response.success && response.token) {
+      // ✅ Save session
+      localStorage.setItem("employeeToken", response.token);
+      localStorage.setItem("employeeData", JSON.stringify(response.user));
+
+      showSuccess(`Welcome back, ${response.user.fullName}!`);
+
+      // ✅ Redirect to employee dashboard
+      router.push({ name: "EmployeeDashboard" });
     } else {
-      showError(response.message || "Login failed. Check your phone number and password.");
+      showError(response.message || "Invalid phone number or password.");
     }
   } catch (err) {
-    console.error("Login error:", err);
-    let apiError = "An unknown error occurred during login.";
-    try {
-      const parsed = JSON.parse(err.message);
-      apiError = parsed.message || parsed.error || err.message;
-    } catch (e) {
-      apiError = err.message || apiError;
-    }
-    showError(`Login Failed: ${apiError}`);
+    console.error("Employee login error:", err);
+    showError(err.message || "Login failed. Please try again.");
   } finally {
     loading.value = false;
   }

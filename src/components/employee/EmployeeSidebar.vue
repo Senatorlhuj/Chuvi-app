@@ -10,25 +10,10 @@
     </div>
 
     <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-      <SidebarLink
-        icon="fa-solid fa-house"
-        name="Dashboard"
-        :to="{ name: 'AdminDashboard' }"
-      />
       <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
         Management
       </h3>
 
-      <SidebarLink
-        icon="fa-solid fa-user-plus"
-        name="Manage Employees"
-        :to="{ name: 'AdminEmployeeCreate' }"
-      />
-      <SidebarLink
-        icon="fa-solid fa-tag"
-        name="Coupon Manager"
-        :to="{ name: 'AdminCouponManager' }"
-      />
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
         name="Update Order Status"
@@ -43,15 +28,6 @@
         icon="fa-solid fa-exclamation-triangle"
         name="All Issues"
         :to="{ name: 'StaffIssues' }"
-      />
-
-      <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
-        System
-      </h3>
-      <SidebarLink
-        icon="fa-solid fa-gear"
-        name="Default Config"
-        :to="{ name: 'AdminServiceConfig' }"
       />
     </nav>
   </div>
@@ -77,29 +53,11 @@
     </div>
 
     <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-      <SidebarLink
-        icon="fa-solid fa-house"
-        name="Dashboard"
-        :to="{ name: 'AdminDashboard' }"
-        @click="$emit('closeSidebar')"
-      />
       <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
         Management
       </h3>
 
-      <SidebarLink
-        icon="fa-solid fa-user-plus"
-        name="Manage Employees"
-        :to="{ name: 'AdminEmployeeCreate' }"
-        @click="$emit('closeSidebar')"
-      />
-      <SidebarLink
-        icon="fa-solid fa-tag"
-        name="Coupon Manager"
-        :to="{ name: 'AdminCouponManager' }"
-        @click="$emit('closeSidebar')"
-      />
-   
+      
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
         name="Update Order Status"
@@ -112,22 +70,13 @@
         :to="{ name: 'StaffReviewsManager' }"
         @click="$emit('closeSidebar')"
       />
-       <SidebarLink
+        <SidebarLink
         icon="fa-solid fa-exclamation-triangle"
         name="All Issues"
         :to="{ name: 'StaffIssues' }"
         @click="$emit('closeSidebar')"
       />
-
-      <h3 class="pt-4 pb-1 text-sm font-semibold text-gray-400 uppercase">
-        System
-      </h3>
-      <SidebarLink
-        icon="fa-solid fa-gear"
-        name="Default Config"
-        :to="{ name: 'AdminServiceConfig' }"
-        @click="$emit('closeSidebar')"
-      />
+   
     </nav>
   </div>
 </template>

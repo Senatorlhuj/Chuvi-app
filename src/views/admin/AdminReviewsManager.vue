@@ -75,26 +75,6 @@ const reviews = ref([]);
 const loading = ref(true);
 const error = ref(null);
 
-// --- Dummy Data Structure Assumption ---
-// Assuming your API returns an array like this:
-/*
-[
-  { 
-    id: 1, 
-    rating: 5, 
-    text: "Great service, highly recommend!",
-    createdAt: "2025-10-01T10:00:00Z",
-    user: { 
-      username: "John Doe", 
-      phone: "555-1234", 
-      email: "john@example.com" 
-    } 
-  },
-  // ... more reviews
-]
-*/
-// Adjust property names (like 'text', 'comment', 'createdAt') if your backend uses different names.
-
 const fetchReviews = async () => {
   loading.value = true;
   error.value = null;

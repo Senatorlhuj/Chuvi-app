@@ -1,37 +1,157 @@
 <template>
   <section class="py-16 md:py-24 bg-bone-white overflow-hidden relative">
     <div class="container mx-auto px-4 relative z-10">
-      <div class="text-center mb-16">
+      <div ref="headerTextRef" class="text-center mb-16">
         <h2
           class="text-3xl md:text-4xl font-black text-charcoal mb-4 tracking-tight"
         >
           Why Choose Chuvi
         </h2>
         <p class="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto">
-          We treat each item like it’s ours—sorted by fabric, washed with care, pressed to a crisp finish, and checked before it’s packed. You’ll get simple booking, clear timelines, and updates you can trust.
+          We treat each item like it’s ours—sorted by fabric, washed with care,
+          pressed to a crisp finish, and checked before it’s packed. You’ll get
+          simple booking, clear timelines, and updates you can trust.
         </p>
       </div>
 
-      <div class="lg:hidden">
-        <div class="swiper-container">
-          <div class="swiper-wrapper">
+      <div ref="contentRef">
+        <div class="lg:hidden">
+          <div class="swiper-container">
+            <div class="swiper-wrapper">
+              <div
+                v-for="(feature, index) in allFeatures"
+                :key="index"
+                class="swiper-slide bg-bone-white rounded-2xl overflow-hidden flex flex-col border border-bone-white/50"
+              >
+                <div
+                  class="relative h-[200px] flex-shrink-0 rounded-2xl overflow-hidden"
+                >
+                  <img
+                    :src="feature.image"
+                    :alt="feature.title"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    class="absolute inset-0 bg-gradient-to-b from-transparent to-navy-blue/10"
+                  ></div>
+                </div>
+                <div
+                  class="py-3 px-4 flex-grow flex flex-col justify-center text-center relative"
+                >
+                  <div
+                    class="absolute -top-4 left-1/2 transform -translate-x-1/2"
+                  >
+                    <div
+                      class="w-8 h-8 bg-gradient-to-br from-golden-brown to-pure-gold rounded-lg flex items-center justify-center"
+                    >
+                      <div
+                        class="w-3 h-3 bg-bone-white rounded-sm opacity-90"
+                      ></div>
+                    </div>
+                  </div>
+                  <h3
+                    class="text-xl font-bold text-charcoal leading-tight mt-2 mb-2"
+                  >
+                    {{ feature.title }}
+                  </h3>
+                  <p
+                    class="text-charcoal/70 text-base leading-relaxed font-medium"
+                  >
+                    {{ feature.description }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination mt-4"></div>
+          </div>
+        </div>
+
+        <div class="hidden lg:flex lg:flex-row lg:space-x-8 relative">
+          <div class="relative flex-shrink-0 lg:w-1/2 mb-10 lg:mb-0">
             <div
-              v-for="(feature, index) in allFeatures"
-              :key="index"
-              class="swiper-slide bg-bone-white rounded-2xl overflow-hidden flex flex-col border border-bone-white/50"
+              class="bg-bone-white rounded-2xl overflow-hidden h-[500px] border border-bone-white/50"
             >
-              <div class="relative h-[200px] flex-shrink-0 rounded-2xl overflow-hidden">
-                <img
-                  :src="feature.image"
-                  :alt="feature.title"
-                  class="w-full h-full object-cover"
-                />
+              <div class="relative h-3/5 rounded-2xl overflow-hidden">
+                <transition-group
+                  tag="div"
+                  name="slide-transition"
+                  class="absolute inset-0"
+                >
+                  <div
+                    v-for="feature in activeFeature"
+                    :key="feature.image"
+                    class="absolute inset-0"
+                  >
+                    <img
+                      :src="feature.image"
+                      :alt="feature.title"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                </transition-group>
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-navy-blue/20 to-transparent"
+                ></div>
+              </div>
+              <div class="p-6 relative h-2/5 flex flex-col justify-center">
+                <div class="absolute -top-6 left-6">
+                  <div
+                    class="w-12 h-12 bg-gradient-to-br from-golden-brown to-pure-gold rounded-xl flex items-center justify-center"
+                  >
+                    <div
+                      class="w-6 h-6 bg-bone-white rounded-md opacity-80"
+                    ></div>
+                  </div>
+                </div>
+                <transition name="fade-up" mode="out-in">
+                  <h3
+                    :key="displayedFeatures.largeCard.title"
+                    class="text-xl md:text-2xl font-bold text-charcoal mb-2 mt-2 leading-tight line-clamp-2"
+                  >
+                    {{ displayedFeatures.largeCard.title }}
+                  </h3>
+                </transition>
+                <transition name="fade-up" mode="out-in">
+                  <p
+                    :key="displayedFeatures.largeCard.description"
+                    class="text-charcoal/70 text-base leading-relaxed font-medium line-clamp-3"
+                  >
+                    {{ displayedFeatures.largeCard.description }}
+                  </p>
+                </transition>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:w-1/2 grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+            <div
+              v-for="(feature, index) in displayedFeatures.smallCards"
+              :key="index"
+              class="bg-bone-white rounded-2xl overflow-hidden h-[400px] flex flex-col border border-bone-white/50"
+            >
+              <div class="relative h-1/2 rounded-2xl overflow-hidden">
+                <transition-group
+                  tag="div"
+                  name="slide-transition"
+                  class="absolute inset-0"
+                >
+                  <div
+                    class="absolute inset-0"
+                    :key="smallCardImages[index].image"
+                  >
+                    <img
+                      :src="smallCardImages[index].image"
+                      :alt="smallCardImages[index].title"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                </transition-group>
                 <div
                   class="absolute inset-0 bg-gradient-to-b from-transparent to-navy-blue/10"
                 ></div>
               </div>
               <div
-                class="py-3 px-4 flex-grow flex flex-col justify-center text-center relative"
+                class="py-3 flex-grow flex flex-col justify-center text-center relative"
               >
                 <div
                   class="absolute -top-4 left-1/2 transform -translate-x-1/2"
@@ -39,125 +159,20 @@
                   <div
                     class="w-8 h-8 bg-gradient-to-br from-golden-brown to-pure-gold rounded-lg flex items-center justify-center"
                   >
-                    <div class="w-3 h-3 bg-bone-white rounded-sm opacity-90"></div>
+                    <div
+                      class="w-3 h-3 bg-bone-white rounded-sm opacity-90"
+                    ></div>
                   </div>
                 </div>
-                <h3
-                  class="text-xl font-bold text-charcoal leading-tight mt-2 mb-2"
-                >
-                  {{ feature.title }}
-                </h3>
-                <p class="text-charcoal/70 text-base leading-relaxed font-medium">
-                  {{ feature.description }}
-                </p>
+                <transition name="fade-up" mode="out-in">
+                  <h3
+                    :key="feature.title"
+                    class="text-xl font-bold text-charcoal leading-tight line-clamp-3 mt-2"
+                  >
+                    {{ feature.title }}
+                  </h3>
+                </transition>
               </div>
-            </div>
-          </div>
-          <div class="swiper-pagination mt-4"></div>
-        </div>
-      </div>
-
-      <div class="hidden lg:flex lg:flex-row lg:space-x-8 relative">
-        <div class="relative flex-shrink-0 lg:w-1/2 mb-10 lg:mb-0">
-          <div
-            class="bg-bone-white rounded-2xl overflow-hidden h-[500px] border border-bone-white/50"
-          >
-            <div class="relative h-3/5 rounded-2xl overflow-hidden">
-              <transition-group
-                tag="div"
-                name="slide-transition"
-                class="absolute inset-0"
-              >
-                <div
-                  v-for="feature in activeFeature"
-                  :key="feature.image"
-                  class="absolute inset-0"
-                >
-                  <img
-                    :src="feature.image"
-                    :alt="feature.title"
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-              </transition-group>
-              <div
-                class="absolute inset-0 bg-gradient-to-t from-navy-blue/20 to-transparent"
-              ></div>
-            </div>
-            <div class="p-6 relative h-2/5 flex flex-col justify-center">
-              <div class="absolute -top-6 left-6">
-                <div
-                  class="w-12 h-12 bg-gradient-to-br from-golden-brown to-pure-gold rounded-xl flex items-center justify-center"
-                >
-                  <div class="w-6 h-6 bg-bone-white rounded-md opacity-80"></div>
-                </div>
-              </div>
-              <transition name="fade-up" mode="out-in">
-                <h3
-                  :key="displayedFeatures.largeCard.title"
-                  class="text-xl md:text-2xl font-bold text-charcoal mb-2 mt-2 leading-tight line-clamp-2"
-                >
-                  {{ displayedFeatures.largeCard.title }}
-                </h3>
-              </transition>
-              <transition name="fade-up" mode="out-in">
-                <p
-                  :key="displayedFeatures.largeCard.description"
-                  class="text-charcoal/70 text-base leading-relaxed font-medium line-clamp-3"
-                >
-                  {{ displayedFeatures.largeCard.description }}
-                </p>
-              </transition>
-            </div>
-          </div>
-        </div>
-        <div class="lg:w-1/2 grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-          <div
-            v-for="(feature, index) in displayedFeatures.smallCards"
-            :key="index"
-            class="bg-bone-white rounded-2xl overflow-hidden h-[400px] flex flex-col border border-bone-white/50"
-          >
-            <div class="relative h-1/2 rounded-2xl overflow-hidden">
-              <transition-group
-                tag="div"
-                name="slide-transition"
-                class="absolute inset-0"
-              >
-                <div
-                  class="absolute inset-0"
-                  :key="smallCardImages[index].image"
-                >
-                  <img
-                    :src="smallCardImages[index].image"
-                    :alt="smallCardImages[index].title"
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-              </transition-group>
-              <div
-                class="absolute inset-0 bg-gradient-to-b from-transparent to-navy-blue/10"
-              ></div>
-            </div>
-            <div
-              class="py-3 flex-grow flex flex-col justify-center text-center relative"
-            >
-              <div
-                class="absolute -top-4 left-1/2 transform -translate-x-1/2"
-              >
-                <div
-                  class="w-8 h-8 bg-gradient-to-br from-golden-brown to-pure-gold rounded-lg flex items-center justify-center"
-                >
-                  <div class="w-3 h-3 bg-bone-white rounded-sm opacity-90"></div>
-                </div>
-              </div>
-              <transition name="fade-up" mode="out-in">
-                <h3
-                  :key="feature.title"
-                  class="text-xl font-bold text-charcoal leading-tight line-clamp-3 mt-2"
-                >
-                  {{ feature.title }}
-                </h3>
-              </transition>
             </div>
           </div>
         </div>
@@ -168,12 +183,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import Swiper from 'swiper';
-import { Autoplay, Pagination } from 'swiper/modules';
+import { useScrollReveal } from "@/composables/useScrollReveal"; // 👈 Import the composable
+import Swiper from "swiper";
+import { Autoplay, Pagination } from "swiper/modules";
 
 // Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/pagination';
+import "swiper/css";
+import "swiper/css/pagination";
 
 // --- Feature Images ---
 import solarImage from "@/assets/images/laundryImages/solar-powered.jpeg";
@@ -191,17 +207,20 @@ const allFeatures = [
   {
     image: tagImage,
     title: "Your clothes stay yours",
-    description: "Every item is meticulously tagged and tracked throughout the process.",
+    description:
+      "Every item is meticulously tagged and tracked throughout the process.",
   },
   {
     image: solarImage,
     title: "NEPA no be problem",
-    description: "Solar backup keeps us running 24/7, ensuring your laundry is always on schedule.",
+    description:
+      "Solar backup keeps us running 24/7, ensuring your laundry is always on schedule.",
   },
   {
     image: handSortingImage,
     title: "Real people, real care",
-    description: "Your clothes are not just machine washed; they are properly hand-sorted with care.",
+    description:
+      "Your clothes are not just machine washed; they are properly hand-sorted with care.",
   },
 ];
 
@@ -240,11 +259,20 @@ const nextSlide = () => {
   activeIndex.value = (activeIndex.value + 1) % allFeatures.length;
 };
 
-// --- Lifecycle Hooks ---
+// --- GSAP ScrollTrigger Setup ---
+const headerTextRef = ref(null); // 1. Ref for the header
+const contentRef = ref(null); // 2. Ref for the main content container
+
+// Apply Scroll Reveal functions
+// Header first
+useScrollReveal(headerTextRef, 40, "top 95%");
+// Content block next
+useScrollReveal(contentRef, 80, "top 80%");
+
+// --- Lifecycle Hooks (Original) ---
 onMounted(() => {
-  startDesktopAutoplay();
-  // Initialize Swiper on component mount
-  new Swiper('.swiper-container', {
+  startDesktopAutoplay(); // Initialize Swiper on component mount
+  new Swiper(".swiper-container", {
     modules: [Autoplay, Pagination],
     loop: true,
     autoplay: {
@@ -252,7 +280,7 @@ onMounted(() => {
       disableOnInteraction: false,
     },
     pagination: {
-      el: '.swiper-pagination',
+      el: ".swiper-pagination",
       clickable: true,
     },
     slidesPerView: 1,
@@ -264,6 +292,8 @@ onUnmounted(() => {
   stopDesktopAutoplay();
 });
 </script>
+
+
 
 <style scoped>
 /* Add Swiper-specific styles */

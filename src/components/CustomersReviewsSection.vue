@@ -11,88 +11,97 @@
     ></div>
 
     <div class="relative z-10 container mx-auto px-4">
-      <h2
-        class="text-3xl md:text-4xl font-extrabold text-white mb-4 text-center md:text-left"
-      >
-        What our clients are saying
-      </h2>
-      <p
-        class="text-lg md:text-xl text-white/70 mb-16 max-w-2xl text-center md:text-left mx-auto md:mx-0"
-      >
-        We've worked with a variety of businesses and individuals who trust us to deliver exceptional products, websites, and experiences.
-      </p>
+      
+      <div ref="headerTextRef">
+        <h2
+          class="text-3xl md:text-4xl font-extrabold text-white mb-4 text-center md:text-left"
+        >
+          What our clients are saying
+        </h2>
+        <p
+          class="text-lg md:text-xl text-white/70 mb-16 max-w-2xl text-center md:text-left mx-auto md:mx-0"
+        >
+          We've worked with a variety of businesses and individuals who trust us to deliver exceptional products, websites, and experiences.
+        </p>
+      </div>
 
-      <swiper
-        :modules="modules"
-        :slides-per-view="1"
-        :space-between="30"
-        :loop="true"
-        :autoplay="{
-          delay: 5000,
-          disableOnInteraction: false,
-        }"
-        :navigation="{
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        }"
-        :pagination="{
-          clickable: true,
-          el: '.swiper-pagination',
-        }"
-        :breakpoints="{
-          768: {
-            slidesPerView: 2,
-            spaceBetween: 30,
-            pagination: false, // Disable dots on larger screens
-          },
-          1024: {
-            slidesPerView: 3,
-            spaceBetween: 30,
-            pagination: false, // Disable dots on larger screens
-          },
-        }"
-        class="pb-10 md:pb-0"
-      >
-        <swiper-slide v-for="(review, index) in reviews" :key="index">
-          <div
-            class="bg-white/10 p-6 rounded-lg h-full flex flex-col justify-between"
-          >
-            <div>
-              <p class="text-2xl font-semibold mb-4 text-golden-brown">
-                "{{ review.tag }}"
-              </p>
-              <p class="text-white/90 text-sm leading-relaxed mb-6">
-                {{ review.text }}
-              </p>
-            </div>
-            <div class="flex items-center mt-auto">
-              <img
-                :src="review.avatar"
-                alt="Reviewer Avatar"
-                class="w-12 h-12 rounded-full object-cover mr-4"
-              />
+      <div ref="carouselRef">
+        <swiper
+          :modules="modules"
+          :slides-per-view="1"
+          :space-between="30"
+          :loop="true"
+          :autoplay="{
+            delay: 5000,
+            disableOnInteraction: false,
+          }"
+          :navigation="{
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          }"
+          :pagination="{
+            clickable: true,
+            el: '.swiper-pagination',
+          }"
+          :breakpoints="{
+            768: {
+              slidesPerView: 2,
+              spaceBetween: 30,
+              pagination: false,
+            },
+            1024: {
+              slidesPerView: 3,
+              spaceBetween: 30,
+              pagination: false,
+            },
+          }"
+          class="pb-10 md:pb-0"
+        >
+          <swiper-slide v-for="(review, index) in reviews" :key="index">
+            <div
+              class="bg-white/10 p-6 rounded-lg h-full flex flex-col justify-between"
+            >
               <div>
-                <p class="font-semibold text-white">{{ review.author }}</p>
-                <p class="text-white/70 text-sm">{{ review.title }}</p>
+                <p class="text-2xl font-semibold mb-4 text-golden-brown">
+                  "{{ review.tag }}"
+                </p>
+                <p class="text-white/90 text-sm leading-relaxed mb-6">
+                  {{ review.text }}
+                </p>
+              </div>
+              <div class="flex items-center mt-auto">
+                <img
+                  :src="review.avatar"
+                  alt="Reviewer Avatar"
+                  class="w-12 h-12 rounded-full object-cover mr-4"
+                />
+                <div>
+                  <p class="font-semibold text-white">{{ review.author }}</p>
+                  <p class="text-white/70 text-sm">{{ review.title }}</p>
+                </div>
               </div>
             </div>
-          </div>
-        </swiper-slide>
+          </swiper-slide>
 
-        <div
-          class="hidden md:block swiper-button-prev !text-white !-left-12"
-        ></div>
-        <div
-          class="hidden md:block swiper-button-next !text-white !-right-12"
-        ></div>
+          <div
+            class="hidden md:block swiper-button-prev !text-white !-left-12"
+          ></div>
+          <div
+            class="hidden md:block swiper-button-next !text-white !-right-12"
+          ></div>
 
-        <div class="swiper-pagination !static mt-6 md:hidden"></div>
-      </swiper>
+          <div class="swiper-pagination !static mt-6 md:hidden"></div>
+        </swiper>
+      </div>
+      
     </div>
   </section>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+import { useScrollReveal } from '@/composables/useScrollReveal'; 
+
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -126,7 +135,7 @@ const reviews = [
     text: "Working with this team was a game-changer for our business. Their insights transformed our user experience and significantly boosted engagement. Truly a pleasure!",
     author: "Chris Johnson",
     title: "CEO, Tech Solutions",
-    avatar: avatar1, // Reusing avatars for example
+    avatar: avatar1, 
   },
   {
     tag: "Incredible",
@@ -136,7 +145,13 @@ const reviews = [
     avatar: avatar2,
   },
 ];
+
+const headerTextRef = ref(null);
+const carouselRef = ref(null);
+useScrollReveal(headerTextRef, 40, "top 95%"); 
+useScrollReveal(carouselRef, 80, "top 80%"); 
 </script>
+
 
 <style scoped>
 

@@ -41,7 +41,7 @@
 
         <div
           v-if="isProfileOpen"
-          class="absolute right-0 mt-2 w-48 bg-bone-white rounded-md bg-white py-1 z-20"
+          class="absolute right-0 mt-2 w-48 bg-bone-white rounded-md py-1 z-20"
         >
           <a
             href="#"

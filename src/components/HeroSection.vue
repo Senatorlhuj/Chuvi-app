@@ -49,7 +49,7 @@
 
 
           <router-link to="/register"
-          class="inline-block w-1/2 md:w-auto bg-golden-brown text-white py-4 px-8 text-lg font-semibold rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          class="inline-block w-1/2 md:w-auto bg-golden-brown text-white py-4 px-8 text-lg font-semibold rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 "
           >
                Book pickup
           </router-link>
@@ -64,7 +64,7 @@
     class="container mx-auto -mt-20 relative z-30 grid grid-cols-1 md:grid-cols-3 gap-6 p-4"
   >
     <div
-      class="bg-white rounded-lg shadow-xl p-6 flex items-start space-x-4 hover:shadow-2xl transition-shadow duration-300 feature-box"
+      class="bg-white rounded-lg  p-6 flex items-start space-x-4 "
     >
       <font-awesome-icon
         icon="medal"
@@ -78,7 +78,7 @@
       </div>
     </div>
     <div
-      class="bg-white rounded-lg shadow-xl p-6 flex items-start space-x-4 hover:shadow-2xl transition-shadow duration-300 feature-box"
+      class="bg-white rounded-lg  p-6 flex items-start space-x-4  feature-box"
     >
       <font-awesome-icon
         icon="bolt"
@@ -93,7 +93,7 @@
       </div>
     </div>
     <div
-      class="bg-white rounded-lg shadow-xl p-6 flex items-start space-x-4 hover:shadow-2xl transition-shadow duration-300 feature-box"
+      class="bg-white rounded-lg  p-6 flex items-start space-x-4  feature-box"
     >
       <font-awesome-icon
         icon="leaf"
@@ -128,7 +128,6 @@ const backgroundImages = [image1, image2, image3, image4, image5, image6];
 </script>
 
 <style scoped>
-/* Reset swiper z-index to ensure background stays behind */
 .swiper-background {
   z-index: 1 !important;
 }
@@ -138,7 +137,6 @@ const backgroundImages = [image1, image2, image3, image4, image5, image6];
   z-index: 1 !important;
 }
 
-/* Text overlay - lower z-index than header */
 .hero-text-overlay {
   position: absolute;
   top: 0;
@@ -146,30 +144,17 @@ const backgroundImages = [image1, image2, image3, image4, image5, image6];
   right: 0;
   bottom: 0;
   z-index: 10 !important;
-  pointer-events: none; /* Allow clicks to pass through to buttons */
+  pointer-events: none; 
 }
 
 .hero-text-overlay > div {
-  pointer-events: auto; /* Re-enable pointer events for content */
+  pointer-events: auto; 
 }
-
-/* Ensure button is clickable but doesn't interfere with header */
 .hero-text-overlay button,
 .hero-text-overlay a {
   position: relative;
-  z-index: 15; /* Lower than header's z-50 */
+  z-index: 15; 
 }
-
-/* Feature boxes enhancement */
-.feature-box {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.feature-box:hover {
-  transform: translateY(-5px);
-}
-
-/* Ensure hero section doesn't create stacking context issues */
 section {
   z-index: auto;
 }

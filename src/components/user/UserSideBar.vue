@@ -2,7 +2,7 @@
   <aside
     class="w-64 bg-navy-blue p-6 shadow-2xl flex flex-col flex-shrink-0 min-h-full"
   >
-    <!-- Logo/Branding for Desktop -->
+   
     <div
       class="hidden md:block pb-6 mb-6 border-b border-golden-brown/50 items-center justify-center"
     >
@@ -50,7 +50,7 @@
           Services
         </h3>
 
-        <!-- Book Pickup Action -->
+     
         <router-link
           :to="{ name: 'BookPickup' }"
           @click="$emit('closeSidebar')"
@@ -70,20 +70,6 @@
         </router-link>
       </div>
     </nav>
-
-    <!-- Logout Button (Fixed at Bottom) -->
-    <div class="pt-8 mt-auto border-t border-golden-brown/50">
-      <button
-        @click="handleLogout"
-        class="w-full flex items-center justify-center p-3 rounded-xl text-cream bg-charcoal/50 hover:bg-red-700/80 hover:shadow-xl transition-all duration-300 cursor-pointer"
-      >
-        <font-awesome-icon
-          icon="sign-out-alt"
-          class="w-5 h-5 mr-3 text-red-400"
-        />
-        Log Out
-      </button>
-    </div>
   </aside>
 </template>
 
@@ -102,14 +88,12 @@ const { showSuccess } = useToast();
 // navigation items
 const navItems = [
   { name: "My Profile", routeName: "UserProfile", icon: "user" },
-  {
-    name: "Addresses",
-    routeName: "UserAddressManager",
-    icon: "map-marked-alt",
-  },
+  
+  { name: "Reviews", routeName: "UserReviews", icon: "star" },
   { name: "Preferences", routeName: "UserPreferences", icon: "cogs" },
+  { name: "Subscription", routeName: "UserSubscription", icon: "crown" },
   // { name: 'Membership', routeName: 'UserMembership', icon: 'crown' },
-  { name: "Referrals", routeName: "UserReferral", icon: "user" },
+  { name: "Referrals", routeName: "UserReferral", icon: "link" },
 ];
 
 // emit event to close sidebar

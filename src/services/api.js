@@ -1,20 +1,42 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const USER_BASE_PATH = 'api/users/me';
-
+function getEmployeeToken() {
+    return localStorage.getItem('employeeToken');
+}
 function getAuthToken(endpoint) {
-    if (endpoint.startsWith('api/admin')) {
+    const adminPrefix = 'api/admin';
+    const employeePrefix = 'api/employee';
+    const sharedPrefixes = [
+        'api/admin/orders',         
+        'api/admin/reviews/',
+        'api/admin/issues',         
+    ];
+
+    if (endpoint.startsWith(adminPrefix) && !sharedPrefixes.some(p => endpoint.startsWith(p))) {
         return localStorage.getItem('adminToken');
+    }
+
+    
+    if (endpoint.startsWith(employeePrefix)) {
+        return getEmployeeToken();
+    }
+    if (sharedPrefixes.some(p => endpoint.startsWith(p))) {
+
+        const adminToken = localStorage.getItem('adminToken');
+        if (adminToken) return adminToken;
+
+        const employeeToken = getEmployeeToken();
+        if (employeeToken) return employeeToken;
     }
     return localStorage.getItem('userToken');
 }
-
 async function authorizedFetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const token = getAuthToken(endpoint);
+    const token = getAuthToken(endpoint); 
 
     const defaultHeaders = {
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '',
+        'Authorization': token ? `Bearer ${token}` : '', 
     };
 
     const response = await fetch(url, {
@@ -36,11 +58,6 @@ async function authorizedFetch(endpoint, options = {}) {
     }
     return null;
 }
-
-// ====================================================================
-// USER AUTH ENDPOINTS
-// ====================================================================
-
 export async function register(userData) {
     return authorizedFetch('api/auth/register', {
         method: 'POST',
@@ -75,12 +92,6 @@ export async function resetPassword(resetData) {
         body: JSON.stringify(resetData)
     });
 }
-
-// ====================================================================
-// USER PROFILE / ADDRESSES / PREFERENCES / MEMBERSHIP
-// ====================================================================
-
-// PROFILE
 export async function fetchUserProfile() {
     return authorizedFetch(`${USER_BASE_PATH}`, { method: 'GET' });
 }
@@ -98,8 +109,6 @@ export async function updatePassword(passwordData) {
         body: JSON.stringify(passwordData)
     });
 }
-
-// ADDRESSES
 export async function fetchAddresses() {
     return authorizedFetch(`${USER_BASE_PATH}/addresses`, { method: 'GET' });
 }
@@ -123,8 +132,6 @@ export async function deleteAddress(addressId) {
         method: 'DELETE'
     });
 }
-
-// PREFERENCES
 export async function updatePreferences(preferencesData) {
     return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
         method: 'PATCH',
@@ -132,7 +139,6 @@ export async function updatePreferences(preferencesData) {
     });
 }
 
-// MEMBERSHIP
 export async function joinMembership(subscriptionDetails) {
     return authorizedFetch(`api/users/membership/join`, {
         method: 'PUT',
@@ -145,17 +151,67 @@ export async function leaveMembership() {
         method: 'POST'
     });
 }
-//REFERRALS
+
 export async function getReferralInfo() {
     return authorizedFetch('api/users/refer', {
-      method: 'GET',
+        method: 'GET',
     });
-  }
-  
+}
 
-// ====================================================================
-// ORDERS (USER)
-// ====================================================================
+export async function fetchUserPlanByCode(planCode) {
+    return authorizedFetch(`api/users/plans/${planCode}`, { method: 'GET' });
+}
+export async function fetchUserPlans() {
+    return authorizedFetch('api/users/plans', { method: 'GET' });
+}
+export async function subscribeToPlan(subscriptionData) {
+    return authorizedFetch('api/subscriptions/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(subscriptionData)
+    });
+}
+
+
+export async function pauseSubscription(pauseData = {}) {
+    return authorizedFetch('api/subscriptions/pause', {
+        method: 'POST',
+        body: JSON.stringify(pauseData)
+    });
+}
+
+export async function resumeSubscription(resumeData = {}) {
+    return authorizedFetch('api/subscriptions/resume', {
+        method: 'POST',
+        body: JSON.stringify(resumeData)
+    });
+}
+
+export async function changeSubscriptionPlan(changeData) {
+    return authorizedFetch('api/subscriptions/change-plan', {
+        method: 'POST',
+        body: JSON.stringify(changeData)
+    });
+}
+
+export async function rolloverSubscription(rolloverData = {}) {
+    return authorizedFetch('api/subscriptions/rollover', {
+        method: 'POST',
+        body: JSON.stringify(rolloverData)
+    });
+}
+
+export async function getCurrentSubscription() {
+    return authorizedFetch('api/subscriptions/current', {
+        method: 'GET'
+    });
+}
+
+export async function cancelAutoPayment(subscriptionId, payload = {}) {
+    return authorizedFetch(`api/subscriptions/${subscriptionId}/cancel-auto-payment`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
+}
 
 export async function createOrder(orderData) {
     return authorizedFetch('api/orders', {
@@ -170,7 +226,6 @@ export async function getUserOrders(phone) {
     });
 }
 
-// 🆕 NEW: Fetch a single order by its ID
 export async function getOrderById(orderId) {
     return authorizedFetch(`api/orders/${orderId}`, {
         method: 'GET'
@@ -187,37 +242,27 @@ export async function getAllServicesCatalog() {
     const data = await authorizedFetch('api/services', { method: 'GET' });
     return data; 
 }
-
-// ====================================================================
-// ORDERS (ADMIN)
-// ====================================================================
-
 export async function getAllOrdersAdmin() {
-    return authorizedFetch('api/admin/orders', { method: 'GET' });
+    return authorizedFetch('api/admin/orders', { method: 'GET' }); 
 }
 
 export async function getOrdersTotalAdmin() {
-    return authorizedFetch('api/admin/orders/total', { method: 'GET' });
+    return authorizedFetch('api/admin/orders/total', { method: 'GET' }); 
 }
 
 export async function adminUpdateOrderStatus(orderId, statusData) {
-    return authorizedFetch(`api/admin/orders/${orderId}/status`, {
+    return authorizedFetch(`api/admin/orders/${orderId}/status`, { 
         method: 'PATCH',
         body: JSON.stringify(statusData)
     });
 }
 
 export async function adminCancelOrder(orderId, noteData = {}) {
-    return authorizedFetch(`api/admin/orders/${orderId}/cancel`, {
+    return authorizedFetch(`api/admin/orders/${orderId}/cancel`, { 
         method: 'PATCH',
         body: JSON.stringify(noteData)
     });
 }
-
-// ====================================================================
-// ADMIN AUTH / EMPLOYEES / COUPONS / SERVICES / CONFIG
-// ====================================================================
-
 export async function adminLogin(credentials) {
     return authorizedFetch('api/admin/login', { method: 'POST', body: JSON.stringify(credentials) });
 }
@@ -227,18 +272,21 @@ export async function adminRegister(userData) {
 }
 
 export async function createEmployee(employeeData) {
+   
     return authorizedFetch('api/admin/employees', { method: 'POST', body: JSON.stringify(employeeData) });
 }
 
 export async function getEmployees() {
+    
     return authorizedFetch('api/admin/get-employees');
 }
 
 export async function deleteEmployee(id) {
+   
     return authorizedFetch(`api/admin/employees/${id}`, { method: 'DELETE' });
 }
 
-// Coupons
+
 export async function createCoupon(couponData) {
     const mappedData = {
         code: couponData.couponCode,
@@ -278,8 +326,6 @@ export async function deleteCoupon(couponId) {
 export async function updateCouponStatus(couponId, statusData) {
     return authorizedFetch(`api/admin/coupons/${couponId}/status`, { method: 'PUT', body: JSON.stringify(statusData) });
 }
-
-// Subscription Plans
 export async function createSubscriptionPlan(planData) {
     return authorizedFetch('api/admin/create/subcription-plan', { method: 'POST', body: JSON.stringify(planData) });
 }
@@ -288,7 +334,6 @@ export async function getAllSubscriptionPlans() {
     return authorizedFetch('api/admin/create/get-subcription-plan');
 }
 
-// Config
 export async function getConfig() {
     return authorizedFetch('api/admin/get-config');
 }
@@ -305,9 +350,8 @@ export async function deleteConfig(key) {
     return authorizedFetch(`api/admin/config/${key}`, { method: 'DELETE' });
 }
 
-// Services
 export async function getServices() {
-    return authorizedFetch('api/admin/get-services');
+    return authorizedFetch('api/admin/get-services'); 
 }
 
 export async function createService(serviceData) {
@@ -315,7 +359,7 @@ export async function createService(serviceData) {
 }
 
 export async function getServiceById(serviceId) {
-    return authorizedFetch(`api/admin/services/${serviceId}`);
+    return authorizedFetch(`api/admin/services/${serviceId}`); 
 }
 
 export async function updateService(serviceId, serviceData) {
@@ -326,7 +370,6 @@ export async function deleteService(serviceId) {
     return authorizedFetch(`api/admin/services/${serviceId}`, { method: 'DELETE' });
 }
 
-// Service Pricing
 export async function getServicePricings() {
     return authorizedFetch('api/admin/get-service-pricings');
 }
@@ -343,7 +386,6 @@ export async function deleteServicePricing(pricingId) {
     return authorizedFetch(`api/admin/service-pricings/${pricingId}`, { method: 'DELETE' });
 }
 
-// Reviews
 export async function getReviewSummary() {
     return authorizedFetch('api/admin/reviews/summary', { method: 'GET' });
 }
@@ -352,19 +394,23 @@ export async function getAdminAllReviews() {
     return authorizedFetch('api/admin/reviews/', { method: 'GET' });
 }
 
-// ====================================================================
-// ISSUES (ADMIN)
-// ====================================================================
-
 export const getIssues = async () => {
-    const data = await authorizedFetch('api/admin/issues', { method: 'GET' });
+   
+    const data = await authorizedFetch('api/admin/issues', { method: 'GET' }); 
     return data.issues; 
 };
 
 export const updateIssue = async (id, payload) => {
+   
     const data = await authorizedFetch(`api/admin/issues/${id}`, { 
         method: 'PATCH',
         body: JSON.stringify(payload) 
     });
     return data.issue; 
 };
+export async function employeeLogin(credentials) {
+    return authorizedFetch('api/employee/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+    });
+}
