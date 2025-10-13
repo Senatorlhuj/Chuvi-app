@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-bone-white p-8 rounded-lg shadow-xl max-w-2xl mx-auto my-12">
+  <div class="bg-bone-white p-8 rounded-lg max-w-2xl mx-auto my-12">
     <FormStepIndicator :current-step="currentStep" />
 
     <div v-if="currentStep === 1" class="mt-8">

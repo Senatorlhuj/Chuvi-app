@@ -7,16 +7,16 @@ function getAuthToken(endpoint) {
     const adminPrefix = 'api/admin';
     const employeePrefix = 'api/employee';
     const sharedPrefixes = [
-        'api/admin/orders',         
+        'api/admin/orders',
         'api/admin/reviews/',
-        'api/admin/issues',         
+        'api/admin/issues',
     ];
 
     if (endpoint.startsWith(adminPrefix) && !sharedPrefixes.some(p => endpoint.startsWith(p))) {
         return localStorage.getItem('adminToken');
     }
 
-    
+
     if (endpoint.startsWith(employeePrefix)) {
         return getEmployeeToken();
     }
@@ -31,12 +31,14 @@ function getAuthToken(endpoint) {
     return localStorage.getItem('userToken');
 }
 async function authorizedFetch(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const token = getAuthToken(endpoint); 
+    const url = `${API_BASE_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
+
+    console.log('➡️ Sending order to:', url);
+    const token = getAuthToken(endpoint);
 
     const defaultHeaders = {
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '', 
+        'Authorization': token ? `Bearer ${token}` : '',
     };
 
     const response = await fetch(url, {
@@ -95,62 +97,65 @@ export async function resetPassword(resetData) {
 export async function fetchUserProfile() {
     return authorizedFetch(`${USER_BASE_PATH}`, { method: 'GET' });
 }
-
 export async function updateProfile(updateData) {
-    return authorizedFetch(`${USER_BASE_PATH}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData)
-    });
+  return authorizedFetch(`${USER_BASE_PATH}`, {
+    method: 'PUT',
+    body: JSON.stringify(updateData),
+  });
 }
 
 export async function updatePassword(passwordData) {
-    return authorizedFetch(`${USER_BASE_PATH}/password`, {
-        method: 'PUT',
-        body: JSON.stringify(passwordData)
-    });
+  return authorizedFetch(`${USER_BASE_PATH}/password`, {
+    method: 'PUT',
+    body: JSON.stringify(passwordData),
+  });
 }
+
 export async function fetchAddresses() {
-    return authorizedFetch(`${USER_BASE_PATH}/addresses`, { method: 'GET' });
+  return authorizedFetch(`${USER_BASE_PATH}/addresses`, { method: 'GET' });
 }
 
 export async function saveAddress(addressData) {
-    return authorizedFetch(`${USER_BASE_PATH}/addresses`, {
-        method: 'POST',
-        body: JSON.stringify(addressData)
-    });
+  return authorizedFetch(`${USER_BASE_PATH}/addresses`, {
+    method: 'POST',
+    body: JSON.stringify(addressData),
+  });
 }
 
 export async function updateAddress(addressId, addressData) {
-    return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
-        method: 'PUT',
-        body: JSON.stringify(addressData)
-    });
+  return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
+    method: 'PUT',
+    body: JSON.stringify(addressData),
+  });
 }
 
 export async function deleteAddress(addressId) {
-    return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
-        method: 'DELETE'
-    });
-}
-export async function updatePreferences(preferencesData) {
-    return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
-        method: 'PATCH',
-        body: JSON.stringify(preferencesData)
-    });
+  if (!addressId) throw new Error("Address ID is required");
+  return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
+    method: 'DELETE',
+  });
 }
 
-export async function joinMembership(subscriptionDetails) {
-    return authorizedFetch(`api/users/membership/join`, {
-        method: 'PUT',
-        body: JSON.stringify(subscriptionDetails)
-    });
+export async function updatePreferences(preferencesData) {
+  return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
+    method: 'PATCH',
+    body: JSON.stringify(preferencesData),
+  });
+}
+
+// --- FIXED MEMBERSHIP ---
+export async function joinMembership() {
+  return authorizedFetch(`api/users/membership/join`, {
+    method: 'POST', // was PUT, backend expects POST
+  });
 }
 
 export async function leaveMembership() {
-    return authorizedFetch(`api/users/membership/leave`, {
-        method: 'POST'
-    });
+  return authorizedFetch(`api/users/membership/leave`, {
+    method: 'POST',
+  });
 }
+
 
 export async function getReferralInfo() {
     return authorizedFetch('api/users/refer', {
@@ -163,6 +168,12 @@ export async function fetchUserPlanByCode(planCode) {
 }
 export async function fetchUserPlans() {
     return authorizedFetch('api/users/plans', { method: 'GET' });
+}
+export async function subscribeUser(subscriptionData) {
+    return authorizedFetch('api/users/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(subscriptionData),
+    });
 }
 export async function subscribeToPlan(subscriptionData) {
     return authorizedFetch('api/subscriptions/subscribe', {
@@ -213,18 +224,63 @@ export async function cancelAutoPayment(subscriptionId, payload = {}) {
     });
 }
 
-export async function createOrder(orderData) {
-    return authorizedFetch('api/orders', {
+export async function createOrder(orderFormData) { // Accepts FormData object
+
+    const token = getAuthToken('api/orders');
+    const url = `${API_BASE_URL.replace(/\/+$/, '')}/api/orders`;
+
+    const response = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify(orderData)
+        headers: {
+
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: orderFormData, // Pass the FormData object directly
     });
+
+    // ... Error and JSON handling remains the same as authorizedFetch
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
+        throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        return response.json();
+    }
+    return null;
+}
+export async function getUserOrders(phone) {
+  try {
+    // --- Normalize to +234 format ---
+    let localPhone = phone.replace(/\D/g, '');
+    if (localPhone.startsWith('0')) {
+      localPhone = '+234' + localPhone.slice(1);
+    } else if (localPhone.startsWith('234')) {
+      localPhone = '+' + localPhone;
+    } else if (!localPhone.startsWith('+234')) {
+      localPhone = '+234' + localPhone;
+    }
+console.log("🔍 Normalized phone:", localPhone);
+    console.log("➡️ Sending order to:", `/api/orders/user/${localPhone}`);
+
+    // --- Fetch (authorizedFetch already handles JSON/headers) ---
+    const data = await authorizedFetch(`/api/orders/user/${localPhone}`, {
+      method: 'GET',
+    });
+
+    // If API returns directly usable JSON, use it
+    return data;
+
+    
+
+  } catch (error) {
+    console.error("Error in getUserOrders:", error);
+    throw new Error("Failed to fetch user orders. Please try again later.");
+  }
 }
 
-export async function getUserOrders(phone) {
-    return authorizedFetch(`api/orders/${phone}`, {
-        method: 'GET'
-    });
-}
+
 
 export async function getOrderById(orderId) {
     return authorizedFetch(`api/orders/${orderId}`, {
@@ -238,27 +294,67 @@ export async function cancelUserOrder(orderId, noteData = {}) {
         body: JSON.stringify(noteData)
     });
 }
+
+export async function trackOrderPublic(orderId) {
+  if (!orderId) throw new Error("Order ID is required");
+  return authorizedFetch(`api/orders/track/${orderId}`, { method: 'GET' });
+}
+
+export async function createReview(reviewData) {
+    return authorizedFetch('api/reviews', {
+        method: 'POST',
+        body: JSON.stringify(reviewData),
+    });
+}
 export async function getAllServicesCatalog() {
     const data = await authorizedFetch('api/services', { method: 'GET' });
-    return data; 
+    return data;
 }
+
+// ==================== Notifications ====================
+
+export async function getNotifications() {
+  return authorizedFetch('api/notifications', { method: 'GET' });
+}
+
+export async function markNotificationAsRead(notificationId) {
+  if (!notificationId) throw new Error('Notification ID is required');
+  return authorizedFetch(`api/notifications/${notificationId}/read`, { method: 'PATCH' });
+}
+
+export async function markAllNotificationsAsRead() {
+  return authorizedFetch('api/notifications/read-all', { method: 'PATCH' });
+}
+
+// ==================== Newsletter Subscription ====================
+export async function subscribeToNewsletter(emailData) {
+  if (!emailData || !emailData.email) {
+    throw new Error("Email is required for newsletter subscription");
+  }
+
+  return authorizedFetch('api/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(emailData),
+  });
+}
+
 export async function getAllOrdersAdmin() {
-    return authorizedFetch('api/admin/orders', { method: 'GET' }); 
+    return authorizedFetch('api/admin/orders', { method: 'GET' });
 }
 
 export async function getOrdersTotalAdmin() {
-    return authorizedFetch('api/admin/orders/total', { method: 'GET' }); 
+    return authorizedFetch('api/admin/orders/total', { method: 'GET' });
 }
 
 export async function adminUpdateOrderStatus(orderId, statusData) {
-    return authorizedFetch(`api/admin/orders/${orderId}/status`, { 
+    return authorizedFetch(`api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
         body: JSON.stringify(statusData)
     });
 }
 
 export async function adminCancelOrder(orderId, noteData = {}) {
-    return authorizedFetch(`api/admin/orders/${orderId}/cancel`, { 
+    return authorizedFetch(`api/admin/orders/${orderId}/cancel`, {
         method: 'PATCH',
         body: JSON.stringify(noteData)
     });
@@ -272,17 +368,17 @@ export async function adminRegister(userData) {
 }
 
 export async function createEmployee(employeeData) {
-   
+
     return authorizedFetch('api/admin/employees', { method: 'POST', body: JSON.stringify(employeeData) });
 }
 
 export async function getEmployees() {
-    
+
     return authorizedFetch('api/admin/get-employees');
 }
 
 export async function deleteEmployee(id) {
-   
+
     return authorizedFetch(`api/admin/employees/${id}`, { method: 'DELETE' });
 }
 
@@ -351,7 +447,7 @@ export async function deleteConfig(key) {
 }
 
 export async function getServices() {
-    return authorizedFetch('api/admin/get-services'); 
+    return authorizedFetch('api/admin/get-services');
 }
 
 export async function createService(serviceData) {
@@ -359,7 +455,7 @@ export async function createService(serviceData) {
 }
 
 export async function getServiceById(serviceId) {
-    return authorizedFetch(`api/admin/services/${serviceId}`); 
+    return authorizedFetch(`api/admin/services/${serviceId}`);
 }
 
 export async function updateService(serviceId, serviceData) {
@@ -395,22 +491,30 @@ export async function getAdminAllReviews() {
 }
 
 export const getIssues = async () => {
-   
-    const data = await authorizedFetch('api/admin/issues', { method: 'GET' }); 
-    return data.issues; 
+
+    const data = await authorizedFetch('api/admin/issues', { method: 'GET' });
+    return data.issues;
 };
 
 export const updateIssue = async (id, payload) => {
-   
-    const data = await authorizedFetch(`api/admin/issues/${id}`, { 
+
+    const data = await authorizedFetch(`api/admin/issues/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(payload) 
+        body: JSON.stringify(payload)
     });
-    return data.issue; 
+    return data.issue;
 };
+export async function getIssuesTotalAdmin() {
+    return authorizedFetch('api/admin/issues/total', {
+        method: 'GET',
+    });
+}
 export async function employeeLogin(credentials) {
     return authorizedFetch('api/employee/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
     });
 }
+
+
+export { authorizedFetch };

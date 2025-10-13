@@ -59,11 +59,6 @@
       </div>
     </div>
   </section>
-
-  <HowItWorksSection />
-  <fee-section />
-  <delivery-section />
-  <pricing-section />
   <section class="container mx-auto px-4 py-16">
     <AdCard :image-src="AdvertImg">
       <template #text>
@@ -78,12 +73,6 @@
 
 <script setup>
 import BaseButton from "@/components/atoms/BaseButton.vue";
-import HowItWorksSection from "@/components/HowItWorksSection.vue";
-import FeeSection from "@/components/FeeSection.vue";
-import DeliverySection from "@/components/DeliverySection.vue";
-import PricingSection from "@/components/PricingSection.vue";
-import AdCard from "@/components/atoms/AdCard.vue";
 import AdvertImage from "@/assets/images/laundryImages/laundry-26.JPG";
-
 const AdvertImg = AdvertImage;
 </script>

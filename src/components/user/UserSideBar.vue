@@ -92,7 +92,7 @@ const navItems = [
   { name: "Reviews", routeName: "UserReviews", icon: "star" },
   { name: "Preferences", routeName: "UserPreferences", icon: "cogs" },
   { name: "Subscription", routeName: "UserSubscription", icon: "crown" },
-  // { name: 'Membership', routeName: 'UserMembership', icon: 'crown' },
+  { name: 'Complaints', routeName: 'UserIssues', icon: 'triangle-exclamation'},
   { name: "Referrals", routeName: "UserReferral", icon: "link" },
 ];
 

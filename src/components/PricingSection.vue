@@ -1,100 +1,114 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <h2 class="text-3xl md:text-4xl font-bold text-charcoal mb-8"> Pricing</h2>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      
-      <PricingCard
-        v-for="card in pricingData"
-        :key="card.title"
-        :title="card.title"
-        :image="card.image"
-      >
-        <template v-slot:items>
-          <PricingItem
-            v-for="item in card.items"
-            :key="item.name"
-            :name="item.name"
-            :price="item.price"
-          />
-        </template>
-      </PricingCard>
-      
+  <section class="bg-bone-white min-h-screen py-12 px-4 md:px-8 lg:px-16">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-charcoal mb-12 text-center">
+       Our Pricing
+      </h2>
+
+      <!-- Skeleton Loading -->
+      <div v-if="isLoading" class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div
+          v-for="n in 6"
+          :key="n"
+          class="animate-pulse bg-white rounded-2xl p-6  space-y-4"
+        >
+          <div class="h-40 bg-gray-200 rounded-xl"></div>
+          <div class="h-6 bg-gray-300 rounded w-3/4"></div>
+          <div class="space-y-2">
+            <div class="h-4 bg-gray-200 rounded w-full"></div>
+            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+          <div class="h-10 bg-gray-300 rounded w-full mt-4"></div>
+        </div>
+      </div>
+
+      <!-- Pricing Cards with Fade-In -->
+      <div v-else class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <PricingCard
+          v-for="(service, index) in services"
+          :key="service._id"
+          :title="service.name"
+          :image="getImageForService(service.code)"
+          class="opacity-0 transform translate-y-8 animate-fadeIn"
+          :style="{ animationDelay: `${index * 150}ms` }"
+        >
+          <template v-slot:items>
+            <PricingItem
+              v-for="tier in service.pricings"
+              :key="tier._id"
+              :name="tier.serviceTier"
+              :price="formatPrice(tier.pricePerItem)"
+            />
+          </template>
+        </PricingCard>
+      </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import PricingCard from '@/components/atoms/PricingCard.vue';
 import PricingItem from '@/components/atoms/PricingItem.vue';
+import { getAllServicesCatalog } from '@/services/api';
 
-// Define the pricing data structure
-const pricingData = ref([
-  {
-    title: 'Tops',
-    image: 'laundry-top.jpeg',
-    items: [
-      { name: 'All Shirts', price: '$5.95' },
-      { name: 'Polo', price: '$5.95' },
-      { name: 'Blouse', price: '$11.95' },
-      { name: 'Sweater', price: '$13.95' },
-      { name: 'Jacket/Blazer', price: '$14.95' },
-      { name: 'Vest', price: '$11.95' }
-    ]
-  },
-  {
-    title: 'Bottoms',
-    image: 'laundry-bottom.jpg',
-    items: [
-      { name: 'Pants', price: '$13.95' },
-      { name: 'Skirt', price: '$11.95' },
-      { name: 'Shorts', price: '$11.95' }
-    ]
-  },
-  {
-    title: 'Full body',
-    image: 'laundry-fullbody.jpg',
-    items: [
-      { name: 'Casual Dress', price: '$20.95' },
-      { name: 'Formal Dress', price: '$28.90' },
-      { name: 'Coat', price: '$24.95' },
-      { name: 'Suit (Jacket & Pants)', price: '$28.90' }
-    ]
-  },
-  {
-    title: 'House hold',
-    image: 'laundry-house-hold.jpeg',
-    items: [
-      { name: 'Bath mat', price: '$6.00' },
-      { name: 'Sheets/Blankets', price: '$15.00' },
-      { name: 'Duvet cover', price: '$15.00' },
-      { name: 'Comforter/Duvet', price: '$39.95' },
-      { name: 'tablecloth', price: '$30.00' }
-    ]
-  },
-  {
-    title: 'Accessories',
-    image: 'laundry-accessories.jpeg',
-    items: [
-      { name: 'Napkin', price: '$6.00' },
-      { name: 'pillowcase', price: '$6.00' },
-      { name: 'Coat', price: '$6.00' },
-      { name: 'Tie/Scarf', price: '$6.00' }
-    ]
-  }
-]);
+const services = ref([]);
+const isLoading = ref(true);
 
-// Use Vite's import.meta.glob to dynamically import all images from the specified folder
-const images = import.meta.glob('@/assets/images/laundryImages/*.{jpg,jpeg,png,svg}');
-
-// Loop through the pricing data and assign the correct image URL
-pricingData.value.forEach(card => {
-  const imagePath = `/src/assets/images/laundryImages/${card.image}`;
-  if (images[imagePath]) {
-    images[imagePath]().then((mod) => {
-      card.image = mod.default;
-    });
+// Fetch backend data
+onMounted(async () => {
+  try {
+    const data = await getAllServicesCatalog();
+    services.value = data;
+  } catch (err) {
+    console.error('Error fetching services catalog:', err);
+  } finally {
+    isLoading.value = false;
   }
 });
+
+// Format price helper
+const formatPrice = (price) => `₦${price.toLocaleString()}`;
+
+// Map service codes to images
+const images = import.meta.glob('/src/assets/images/laundryImages/*.{jpg,jpeg,png,svg}', { eager: true });
+const getImageForService = (code) => {
+  const mapping = {
+    SHIRT: 'laundry-top.jpeg',
+    TROUSER: 'laundry-bottom.jpg',
+    SIMPLE_DRESS: 'laundry-fullbody.jpg',
+    NATIVE: 'laundry-fullbody.jpg',
+    JEANS: 'laundry-bottom.jpg',
+    BEDSHEET: 'laundry-house-hold.jpeg',
+    PILLOWCASE: 'laundry-accessories.jpeg',
+    DUVET: 'laundry-house-hold.jpeg',
+    AGBADA: 'laundry-fullbody.jpg'
+  };
+  const fileName = mapping[code] || 'laundry-generic.jpg';
+  const imagePath = `/src/assets/images/laundryImages/${fileName}`;
+  return images[imagePath]?.default || '';
+};
 </script>
+
+<style scoped>
+.bg-bone-white {
+  background-color: var(--color-bone-white);
+}
+
+/* Subtle fade-up animation for cards */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s forwards;
+}
+</style>

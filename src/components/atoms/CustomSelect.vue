@@ -1,149 +1,251 @@
 <template>
-  <div class="relative w-full" :aria-label="label">
-    <button 
-      type="button"
-      @click="isOpen = !isOpen"
-      :aria-expanded="isOpen"
-      aria-haspopup="listbox"
-      :disabled="disabled"
-      class="flex justify-between items-center w-full px-4 py-3 text-base rounded-lg cursor-pointer transition-colors duration-200 
-             border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--primary)]"
-      :class="[
-        // Custom styling to match the rest of your form inputs
-        ' text-[var(--color-charcoal)] border-[var(--color-charcoal)]/50',
-        { 'opacity-60 cursor-not-allowed ': disabled }
-      ]"
+  <div class="space-y-1">
+    <!-- Label -->
+    <label
+      v-if="label"
+      :for="id"
+      class="text-sm font-medium text-cream/70 block transition-colors duration-200"
     >
-      <span class="truncate">{{ selectedOption ? selectedOption.label : placeholder }}</span>
-      <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': isOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-      </svg>
-    </button>
+      {{ label }}
+      <span v-if="required" class="text-red-400 ml-1">*</span>
+    </label>
 
-    <Transition name="fade-slide">
-      <ul
-        v-if="isOpen"
-        ref="listbox"
-        role="listbox"
-        tabindex="-1"
-        class="absolute z-10 w-full mt-1 max-h-60 overflow-auto rounded-lg shadow-xl 
-               bg-[var(--color-bone-white)] "
+    <!-- Custom Select Dropdown -->
+    <div class="relative" ref="selectWrapper">
+      <!-- Selected Value Display -->
+      <button
+        type="button"
+        :id="id"
+        @click="toggleDropdown"
+        @keydown.enter.prevent="toggleDropdown"
+        @keydown.space.prevent="toggleDropdown"
+        @keydown.escape="closeDropdown"
+        @keydown.down.prevent="navigateOptions(1)"
+        @keydown.up.prevent="navigateOptions(-1)"
+        :disabled="disabled"
+        class="appearance-none block w-full p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left text-navy-blue font-medium transition-all duration-30 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <li 
-          v-for="option in options"
-          :key="option.value"
-          role="option"
-          :aria-selected="option.value === modelValue"
-          @click="selectOption(option)"
-          class="px-4 py-2 text-sm cursor-pointer transition-colors duration-100 text-[var(--color-charcoal)] hover:bg-golden-brown hover:text-white"
-          :class="{
-            // Use your golden-brown color for selection highlight
-            'bg-[var(--color-cream)] text-charcoal font-medium': option.value === modelValue,
-            'hover:bg-[var(--color-golden-brown)]/10': option.value !== modelValue,
-          }"
+        <span v-if="selectedOption" class="block truncate">
+          {{ selectedOption.label }}
+        </span>
+        <span v-else class="block truncate text-gray-400">
+          {{ placeholder }}
+        </span>
+      </button>
+
+      <!-- Dropdown Arrow Icon with Animation -->
+      <div
+        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-navy-blue transition-all duration-300"
+        :class="{ 'rotate-180 text-golden-brown': isOpen }"
+      >
+        <svg
+          class="h-5 w-5 transition-colors duration-200"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {{ option.label }}
-        </li>
-        
-        <li v-if="!options || options.length === 0" class="px-4 py-2 text-sm text-[var(--color-charcoal)]/60 italic">
-          No options available
-        </li>
-      </ul>
-    </Transition>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2.5"
+            d="M19 9l-7 7-7-7"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Dropdown Options List -->
+      <transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="isOpen"
+          class="absolute z-50 w-full mt-2 bg-bone-white rounded-lg max-h-60 overflow-auto"
+        >
+          <ul>
+            <li
+              v-for="(option, index) in options"
+              :key="option.value"
+              @click="selectOption(option)"
+              @mouseenter="highlightedIndex = index"
+              class="px-3 py-2.5 cursor-pointer text-navy-blue transition-all duration-150 font-medium"
+              :class="{
+                'bg-charcoal !text-cream/60': highlightedIndex === index,
+                // ' bg-charcoal': modelValue === option.value,
+                '!hover:bg-charcoal text-cream/60': highlightedIndex !== index,
+              }"
+            >
+              <div class="flex items-center justify-between">
+                <span class="block truncate">{{ option.label }}</span>
+                <!-- Checkmark for selected option -->
+                <svg
+                  v-if="modelValue === option.value"
+                  class="h-5 w-5 text-golden-brown"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </transition>
+    </div>
+
+    <!-- Helper Text -->
+    <p
+      v-if="helperText"
+      class="text-xs text-gray-600 mt-1 transition-opacity duration-200"
+    >
+      {{ helperText }}
+    </p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue';
+import {
+  defineProps,
+  defineEmits,
+  computed,
+  ref,
+  onMounted,
+  onUnmounted,
+} from "vue";
 
-// --- Props Definition ---
 const props = defineProps({
-  /** The currently selected value (used with v-model) */
   modelValue: {
-    type: [String, Number, Object],
-    default: null,
+    type: [String, Number, Array, Object],
+    default: "",
   },
-  /** Array of available options */
   options: {
     type: Array,
     required: true,
-    // Expected format: [{ label: 'Option 1', value: 'v1' }, ...]
   },
-  /** Placeholder text when no option is selected */
-  placeholder: {
-    type: String,
-    default: 'Select an option',
-  },
-  /** Aria label for accessibility */
   label: {
     type: String,
-    required: true,
+    default: null,
   },
-  /** Disable the select */
+  placeholder: {
+    type: String,
+    default: "Select an option",
+  },
   disabled: {
     type: Boolean,
     default: false,
   },
+  required: {
+    type: Boolean,
+    default: false,
+  },
+  helperText: {
+    type: String,
+    default: null,
+  },
 });
 
-// --- Emits Definition ---
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(["update:modelValue"]);
 
-// --- State Management ---
 const isOpen = ref(false);
-const listbox = ref(null); 
-const buttonRef = ref(null); // Ref for the button
+const highlightedIndex = ref(-1);
+const selectWrapper = ref(null);
 
-// --- Computed Properties ---
-/** Finds the selected option object based on the modelValue */
+// Generate a unique ID for accessibility
+const id = computed(
+  () => `custom-select-${Math.random().toString(36).substr(2, 9)}`
+);
+
+// Find the selected option object
 const selectedOption = computed(() => {
-  return props.options.find(opt => opt.value === props.modelValue);
+  return props.options.find((option) => option.value === props.modelValue);
 });
 
-// --- Methods ---
-/** Handles selection and updates the v-model */
-const selectOption = (option) => {
+const toggleDropdown = () => {
   if (props.disabled) return;
-  emit('update:modelValue', option.value);
-  isOpen.value = false; // Close after selection
+  isOpen.value = !isOpen.value;
+  if (isOpen.value) {
+    // Highlight current selection when opening
+    const currentIndex = props.options.findIndex(
+      (opt) => opt.value === props.modelValue
+    );
+    highlightedIndex.value = currentIndex >= 0 ? currentIndex : 0;
+  }
 };
 
-// --- Accessibility & Outside Click Handling ---
+const closeDropdown = () => {
+  isOpen.value = false;
+  highlightedIndex.value = -1;
+};
 
-/** Close dropdown when clicking outside */
+const selectOption = (option) => {
+  emit("update:modelValue", option.value);
+  closeDropdown();
+};
+
+const navigateOptions = (direction) => {
+  if (!isOpen.value) {
+    toggleDropdown();
+    return;
+  }
+
+  highlightedIndex.value += direction;
+
+  // Loop around
+  if (highlightedIndex.value < 0) {
+    highlightedIndex.value = props.options.length - 1;
+  } else if (highlightedIndex.value >= props.options.length) {
+    highlightedIndex.value = 0;
+  }
+
+  // Auto-scroll highlighted option into view
+  const listElement = selectWrapper.value?.querySelector("ul");
+  const highlightedElement = listElement?.children[highlightedIndex.value];
+  highlightedElement?.scrollIntoView({ block: "nearest" });
+};
+
+// Close dropdown when clicking outside
 const handleClickOutside = (event) => {
-  // Check if the click is outside both the listbox and the button
-  const buttonElement = listbox.value?.parentElement.querySelector('button');
-  if (listbox.value && !listbox.value.contains(event.target) && buttonElement && !buttonElement.contains(event.target)) {
-    isOpen.value = false;
+  if (selectWrapper.value && !selectWrapper.value.contains(event.target)) {
+    closeDropdown();
   }
 };
 
-/** Add/Remove outside click listener */
-watch(isOpen, (newVal) => {
-  if (newVal) {
-    document.addEventListener('click', handleClickOutside);
-  } else {
-    document.removeEventListener('click', handleClickOutside);
-  }
-}, { immediate: true });
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
 
-// Cleanup the listener when the component is unmounted
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
 <style scoped>
-/* Basic fade and slide transition for the dropdown */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+/* Custom scrollbar for dropdown */
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
 }
 
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
+.overflow-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: rgba(0, 47, 108, 0.3);
+  border-radius: 4px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 47, 108, 0.5);
 }
 </style>

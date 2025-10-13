@@ -1,12 +1,9 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen  p-4">
-    <div
-      class="w-full max-w-lg  p-8"
-    >
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-lg p-8">
       <!-- Logo Section -->
       <div class="text-center mb-8">
         <div class="inline-block bg-navy-blue rounded-full p-3 shadow-lg">
-          <!-- Using an image from your provided template -->
           <img
             src="@/assets/images/logo/chuvi-logo-icon.png"
             alt="Chuvi Brand Logo"
@@ -14,7 +11,7 @@
           />
         </div>
       </div>
-      
+
       <!-- Titles -->
       <h2
         class="text-3xl font-bold text-navy-blue text-center mb-2"
@@ -83,14 +80,16 @@ import FormField from "@/components/atoms/FormField.vue";
 import { login } from "@/services/api.js";
 import { useToast } from "@/composables/useToast";
 
-const { showSuccess, showError } = useToast();
+const { showToast } = useToast(); // ✅ correct import from your useToast.js
 const router = useRouter();
-const initialCredentials = {
+
+const credentials = ref({
   phone: "",
   password: "",
-};
-const credentials = ref({ ...initialCredentials });
+});
+
 const loading = ref(false);
+
 const handleLogin = async () => {
   loading.value = true;
 
@@ -98,13 +97,15 @@ const handleLogin = async () => {
     const response = await login(credentials.value);
 
     if (response && response.token) {
-      showSuccess(`Welcome back! You are now logged in.`);
-      
-      localStorage.setItem('userToken', response.token); 
-      router.push({ name: 'BookPickup' }); 
-      
+      showToast("Welcome back! You are now logged in.", "success");
+
+      localStorage.setItem("userToken", response.token);
+      router.push({ name: "BookPickup" });
     } else {
-      showError(response.message || "Login failed. Check your phone number and password.");
+      showToast(
+        response.message || "Login failed. Check your phone number and password.",
+        "error"
+      );
     }
   } catch (err) {
     console.error("Login error:", err);
@@ -115,7 +116,7 @@ const handleLogin = async () => {
     } catch (e) {
       apiError = err.message || apiError;
     }
-    showError(`Login Failed: ${apiError}`);
+    showToast(`Login Failed: ${apiError}`, "error");
   } finally {
     loading.value = false;
   }

@@ -44,20 +44,17 @@ const route = useRoute();
 const router = useRouter();
 const orderStore = useOrderStore();
 
-// Use a computed to always stay in sync with the store
 const orderNumber = computed(() => orderStore.orderNumber);
 const orderDetails = computed(() => orderStore.orderData);
 
 onMounted(() => {
-  // If the store is empty but the query contains orderNumber, set it
   if (!orderStore.orderNumber && route.query.orderNumber) {
     orderStore.setOrder(route.query.orderNumber, {}); // optional data
   }
 
-  // If there’s no store and no query, redirect back
-  if (!orderStore.orderNumber && !route.query.orderNumber) {
-    console.error('No order number found. Redirecting to form.');
-    router.push({ name: 'BookPickup' }); // adjust to your route name
-  }
+  // if (!orderStore.orderNumber && !route.query.orderNumber) {
+  //   console.error('No order number found. Redirecting to form.');
+  //   router.push({ name: 'BookPickup' }); 
+  // }
 });
 </script>

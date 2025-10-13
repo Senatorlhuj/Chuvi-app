@@ -7,8 +7,11 @@ import { Form, Field, ErrorMessage } from 'vee-validate';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+// FontAwesome
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+
+// Solid icons
 import {
   faPhoneVolume,
   faEnvelope,
@@ -34,7 +37,8 @@ import {
   faShirt,
   faUserTie,
   faHandsHolding,
-  faDoorOpen, faBuilding,
+  faDoorOpen,
+  faBuilding,
   faHouse,
   faUserPlus,
   faTrash,
@@ -57,22 +61,43 @@ import {
   faCalendarPlus,
   faTriangleExclamation,
   faCommentDots, 
-  faStarHalfStroke,
-  faStar,
-  faExclamationTriangle, faPlus, faSearch, faLink, faBell
+  faStarHalfAlt, // half star
+  faStar,        // solid star
+  faExclamationTriangle,
+  faPlus,
+  faSearch,
+  faLink,
+  faBell,
+  faShoppingCart,
+  faTimesCircle,
+  faMapPin,
+  faListOl,
+  faShieldAlt,
+  faGem,
+  faGift,
+  faMobileAlt,
+  faGlobe,
+  faChartLine,
+  faUsers
+  
 } from '@fortawesome/free-solid-svg-icons';
 
+// Regular icons
+import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
+
+// Brand icons
 import {
   faFacebook,
   faInstagram,
   faTiktok
 } from '@fortawesome/free-brands-svg-icons';
 
-
+// Swiper
 import 'swiper/css';
-import 'swiper/css/pagination'; 
+import 'swiper/css/pagination';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
+// Add icons to library
 library.add(
   faPhoneVolume,
   faEnvelope,
@@ -98,12 +123,10 @@ library.add(
   faShirt,
   faUserTie,
   faHandsHolding,
-  faFacebook,
-  faInstagram,
-  faTiktok,
-  faDoorOpen, faBuilding,
+  faDoorOpen,
+  faBuilding,
+  faHouse,
   faUserPlus,
-  faPenToSquare,
   faTrash,
   faTruckRampBox,
   faGear,
@@ -111,7 +134,6 @@ library.add(
   faClock,
   faDollarSign,
   faPenToSquare,
-  faHouse,
   faXmark,
   faCheckCircle,
   faSignOutAlt,
@@ -125,22 +147,55 @@ library.add(
   faCalendarPlus,
   faTriangleExclamation,
   faCommentDots, 
-  faStarHalfStroke,
-  faStar,
-  faExclamationTriangle, faPlus, faSearch, faLink, faBell        
+  faStarHalfAlt,
+  faStar,        // solid star
+  farStar,       // regular star (empty)
+  faExclamationTriangle,
+  faPlus,
+  faSearch,
+  faLink,
+  faBell,
+  faShoppingCart,
+  faTimesCircle,
+  faMapPin,
+  faFacebook,
+  faInstagram,
+  faTiktok,
+  faListOl,
+  faShieldAlt,
+  faGem,
+  faGift,
+  faMobileAlt,
+  faGlobe,
+  faChartLine,
+  faUsers
 );
+
+// Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
+
+// Create Vue app
 const app = createApp(App);
+
+// Make GSAP and ScrollTrigger globally available
 app.config.globalProperties.$gsap = gsap;
 app.config.globalProperties.$ScrollTrigger = ScrollTrigger;
+
+// Pinia & Router
 app.use(createPinia());
 app.use(router);
 
+// VeeValidate components
 app.component('VeeForm', Form);
 app.component('VeeField', Field);
 app.component('VeeErrorMessage', ErrorMessage);
+
+// FontAwesome
 app.component('font-awesome-icon', FontAwesomeIcon);
+
+// Swiper components
 app.component('Swiper', Swiper);
 app.component('SwiperSlide', SwiperSlide);
 
+// Mount app
 app.mount('#app');

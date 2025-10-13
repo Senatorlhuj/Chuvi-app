@@ -1,6 +1,7 @@
 <template>
   <div class="flex items-center justify-center min-h-screen p-4">
     <div class="w-full max-w-lg p-8 rounded-2xl">
+      <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-block bg-navy-blue rounded-full p-3">
           <img
@@ -10,6 +11,8 @@
           />
         </div>
       </div>
+
+      <!-- Title -->
       <h2
         class="text-3xl font-bold text-golden-brown text-center mb-2"
         :style="{ fontFamily: '--font-display' }"
@@ -20,6 +23,7 @@
         Sign up to access your dashboard.
       </p>
 
+      <!-- Registration Form -->
       <form @submit.prevent="handleRegistration" class="space-y-5">
         <FormField
           label="Full Name"
@@ -69,6 +73,7 @@
         </button>
       </form>
 
+      <!-- Login Redirect -->
       <div class="mt-6 text-center text-charcoal">
         Already have an account?
         <router-link
@@ -82,7 +87,6 @@
   </div>
 </template>
 
-<
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -90,22 +94,22 @@ import FormField from "@/components/atoms/FormField.vue";
 import { register } from "@/services/api.js";
 import { useToast } from "@/composables/useToast";
 
-const { showSuccess, showError } = useToast();
+const { showToast } = useToast(); // ✅ Use the correct composable
 const router = useRouter();
-const route = useRoute(); //
+const route = useRoute();
 
 // --- STATE ---
-const initialUserData = {
+const userData = ref({
   fullName: "",
   email: "",
   phone: "",
   password: "",
   referredBy: "",
-};
-const userData = ref({ ...initialUserData });
+});
+
 const loading = ref(false);
 
-// --- PREFILL referral code if exists ---
+// --- PREFILL REFERRAL CODE ---
 onMounted(() => {
   const referralCode = route.query.code;
   if (referralCode) {
@@ -118,22 +122,27 @@ const handleRegistration = async () => {
   loading.value = true;
 
   const payload = { ...userData.value };
-  if (!payload.referredBy) {
-    delete payload.referredBy;
-  }
+  if (!payload.referredBy) delete payload.referredBy;
 
   try {
     const response = await register(payload);
 
-    // ✅ Successful registration → push to verifyPhone
-    showSuccess(
-      `Registration successful for **${payload.fullName}**! Please verify your phone number.`
-    );
+    if (response && response.message) {
+      showToast(
+        `Registration successful for ${payload.fullName}! Please verify your phone number.`,
+        "success"
+      );
 
-    router.push({
-      name: "VerifyPhone",
-      query: { phone: payload.phone },
-    });
+      router.push({
+        name: "VerifyPhone",
+        query: { phone: payload.phone },
+      });
+    } else {
+      showToast(
+        response.error || "Registration failed. Please check your details.",
+        "error"
+      );
+    }
   } catch (err) {
     console.error("Registration error:", err);
     let apiError = "An unknown error occurred during registration.";
@@ -143,7 +152,7 @@ const handleRegistration = async () => {
     } catch (e) {
       apiError = err.message || apiError;
     }
-    showError(`Registration Failed: ${apiError}`);
+    showToast(`Registration Failed: ${apiError}`, "error");
   } finally {
     loading.value = false;
   }

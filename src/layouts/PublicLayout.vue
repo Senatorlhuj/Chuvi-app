@@ -8,6 +8,8 @@
         @close="handleModalClose"
         @signup="handleSignup"
       />
+      <ScrollToTop />
+      <WhatsAppChat />
     </main>
     <Footer />
   </div>
@@ -18,33 +20,33 @@ import { ref, onMounted, computed } from "vue";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import EmailSignupModal from "@/components/EmailSignupModal.vue";
-
+import ScrollToTop from "@/components/atoms/ScrollToTop.vue";
+import WhatsAppChat from "@/components/atoms/WhatsAppChat.vue";
 
 const showModal = ref(false);
 const isUserLoggedIn = computed(() => {
-  return !!localStorage.getItem('userToken');
+  return !!localStorage.getItem("userToken");
 });
 
-
 const shouldShowModal = computed(() => {
-  const hasSeenOffer = sessionStorage.getItem('hasSeenOffer');
+  const hasSeenOffer = sessionStorage.getItem("hasSeenOffer");
   return !isUserLoggedIn.value && !hasSeenOffer && showModal.value;
 });
 
 const handleModalClose = () => {
-  sessionStorage.setItem('hasSeenOffer', 'true');
+  sessionStorage.setItem("hasSeenOffer", "true");
   showModal.value = false;
 };
 
 const handleSignup = (email) => {
-  handleModalClose(); 
+  handleModalClose();
 };
 
 onMounted(() => {
   if (!isUserLoggedIn.value) {
     setTimeout(() => {
       showModal.value = true;
-    }, 1500); 
+    }, 1500);
   }
 });
 </script>

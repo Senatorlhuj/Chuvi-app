@@ -1,31 +1,43 @@
 <template>
-  <section class="relative py-16 md:py-24 bg-black text-white overflow-hidden">
+  <section
+    id="testimonials"
+    class="relative py-24 bg-black text-white overflow-hidden"
+  >
+    <!-- Background image -->
     <div
       class="absolute inset-0 z-0"
       :style="{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        opacity: '0.3',
+        opacity: '0.25',
       }"
     ></div>
 
-    <div class="relative z-10 container mx-auto px-4">
-      
-      <div ref="headerTextRef">
-        <h2
-          class="text-3xl md:text-4xl font-extrabold text-white mb-4 text-center md:text-left"
-        >
-          What our clients are saying
+    <div class="relative z-10 container mx-auto px-6">
+      <!-- Header -->
+      <div
+        id="testimonial-header"
+        data-animate
+        :class="isVisible['testimonial-header'] ? 'visible' : ''"
+        class="text-center mb-16"
+      >
+        <h2 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+          TESTIMONIALS & REVIEWS
         </h2>
         <p
-          class="text-lg md:text-xl text-white/70 mb-16 max-w-2xl text-center md:text-left mx-auto md:mx-0"
+          class="text-lg md:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed"
         >
-          We've worked with a variety of businesses and individuals who trust us to deliver exceptional products, websites, and experiences.
+          What Real Customers Say
         </p>
       </div>
 
-      <div ref="carouselRef">
+      <!-- Carousel -->
+      <div
+        id="testimonial-carousel"
+        data-animate
+        :class="isVisible['testimonial-carousel'] ? 'visible' : ''"
+      >
         <swiper
           :modules="modules"
           :slides-per-view="1"
@@ -57,18 +69,17 @@
           }"
           class="pb-10 md:pb-0"
         >
-          <swiper-slide v-for="(review, index) in reviews" :key="index">
+          <swiper-slide
+            v-for="(review, index) in reviews"
+            :key="index"
+            class="transition-all duration-500"
+          >
             <div
-              class="bg-white/10 p-6 rounded-lg h-full flex flex-col justify-between"
+              class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl h-full flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
-              <div>
-                <p class="text-2xl font-semibold mb-4 text-golden-brown">
-                  "{{ review.tag }}"
-                </p>
-                <p class="text-white/90 text-sm leading-relaxed mb-6">
-                  {{ review.text }}
-                </p>
-              </div>
+              <p class="text-white/90 text-sm leading-relaxed mb-6 italic">
+                “{{ review.text }}”
+              </p>
               <div class="flex items-center mt-auto">
                 <img
                   :src="review.avatar"
@@ -76,32 +87,51 @@
                   class="w-12 h-12 rounded-full object-cover mr-4"
                 />
                 <div>
-                  <p class="font-semibold text-white">{{ review.author }}</p>
-                  <p class="text-white/70 text-sm">{{ review.title }}</p>
+                  <p class="font-semibold text-pure-gold">
+                    {{ review.author }}
+                  </p>
+                  <p class="text-white/70 text-sm">{{ review.location }}</p>
                 </div>
               </div>
             </div>
           </swiper-slide>
 
+          <!-- Navigation & Pagination -->
           <div
             class="hidden md:block swiper-button-prev !text-white !-left-12"
           ></div>
           <div
             class="hidden md:block swiper-button-next !text-white !-right-12"
           ></div>
-
           <div class="swiper-pagination !static mt-6 md:hidden"></div>
         </swiper>
       </div>
-      
+
+      <!-- CTA -->
+      <div
+        id="testimonial-cta"
+        data-animate
+        :class="isVisible['testimonial-cta'] ? 'visible' : ''"
+        class="text-center mt-16"
+      >
+        <p class="text-lg text-white/80 mb-6">
+          Join <span class="text-pure-gold font-semibold">800+</span> satisfied
+          customers across Agulu.
+        </p>
+        <router-link to="/register">
+          <button
+            class="bg-pure-gold text-navy-blue py-3 px-10 rounded-md font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer"
+          >
+            Experience CHUVI Care
+          </button>
+        </router-link>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useScrollReveal } from '@/composables/useScrollReveal'; 
-
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -116,45 +146,60 @@ import avatar2 from "@/assets/images/avatars/avatar2.JPG";
 
 const reviews = [
   {
-    tag: "Extraordinary",
-    text: "Jeremy has been instrumental in helping CompanyName grow. The product we have released to our customers is helping us to maintain a high rate of growth as we push the platform into new territories.",
-    author: "Adrian Auditore",
-    title: "CoFounder, Day app",
+    text: "Clothes look new every time. Pickup was on time—again.",
+    author: "Ifeanyi",
+    location: "UNIZIK environs",
     avatar: avatar1,
   },
   {
-    tag: "Spectacular",
-    text: "Reliable, hard-working, empathetic, incredibly skilled at what all he does, understanding his craft at a level I've rarely seen. I've met, and I've met 1000's of people in his profession over the last 10 years. Jeremy was very consultative, available whenever we needed him, clear in his communication and fast in his responses. He is a 12/10 I would highly recommend, so glad to be connected with him. Very happy with the end result he delivered.",
-    author: "Adrian Auditore",
-    title: "CoFounder, Day app",
+    text: "Pressed perfectly, delivered early before my meeting.",
+    author: "Amaka",
+    location: "Aroma",
     avatar: avatar2,
   },
-
   {
-    tag: "Brilliant",
-    text: "Working with this team was a game-changer for our business. Their insights transformed our user experience and significantly boosted engagement. Truly a pleasure!",
-    author: "Chris Johnson",
-    title: "CEO, Tech Solutions",
-    avatar: avatar1, 
-  },
-  {
-    tag: "Incredible",
-    text: "The dedication and talent displayed by this agency are unparalleled. They delivered beyond expectations, and we are thrilled with the outcome of our new website.",
-    author: "Maria Garcia",
-    title: "Marketing Director, Global Corp",
+    text: "Best native wear care I’ve used in Awka.",
+    author: "Chinedu",
+    location: "Ifite",
     avatar: avatar2,
   },
 ];
 
-const headerTextRef = ref(null);
-const carouselRef = ref(null);
-useScrollReveal(headerTextRef, 40, "top 95%"); 
-useScrollReveal(carouselRef, 80, "top 80%"); 
+// Reuse the same IntersectionObserver reveal logic as About section
+const isVisible = ref({});
+
+onMounted(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          isVisible.value[entry.target.id] = true;
+        }
+      });
+    },
+    { threshold: 0.2 }
+  );
+
+  document.querySelectorAll("[data-animate]").forEach((el) => {
+    observer.observe(el);
+  });
+
+  onBeforeUnmount(() => observer.disconnect());
+});
 </script>
 
-
 <style scoped>
+[data-animate] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1s ease;
+}
+[data-animate].visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
+/* Swiper controls */
 :deep(.swiper-button-prev),
 :deep(.swiper-button-next) {
   display: none !important;
@@ -167,10 +212,9 @@ useScrollReveal(carouselRef, 80, "top 80%");
     font-size: 2rem !important;
     width: 40px !important;
     height: 40px !important;
-    color: #fff !important; 
+    color: #fff !important;
   }
 }
-
 
 :deep(.swiper-pagination-bullet) {
   width: 12px !important;
@@ -181,11 +225,9 @@ useScrollReveal(carouselRef, 80, "top 80%");
   margin: 0 4px !important;
 }
 
-
 :deep(.swiper-pagination-bullet-active) {
-  background-color: #b6862c !important; 
+  background-color: #b6862c !important;
 }
-
 
 :deep(.swiper-pagination) {
   display: block !important;

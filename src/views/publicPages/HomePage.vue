@@ -1,6 +1,7 @@
 <script setup>
 import HeroSection from "@/components/HeroSection.vue";
-import ServicesPricingHighlight from "@/components/ServicesPricingHighlight.vue"
+import AboutSection from "@/components/AboutSection.vue";
+
 import HowItWorksSection from "@/components/HowItWorksSection.vue";
 import CustomersReviewsSection from "@/components/CustomersReviewsSection.vue";
 import WhyChooseUs from "@/components/WhyChooseUs.vue";
@@ -11,7 +12,8 @@ import FAQSection from "@/components/FAQSection.vue"
 
 <template>
   <HeroSection />
-  <ServicesPricingHighlight />
+  <AboutSection />
+
   <HowItWorksSection />
   <CustomersReviewsSection />
   <WhyChooseUs />

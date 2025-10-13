@@ -14,11 +14,7 @@
           <img
             src="@/assets/images/laundryImages/laundry-6.jpeg"
             alt="Discount Offer"
-            class="w-full h-48 object-cover"
-            style="
-              border-top-left-radius: 0.5rem;
-              border-top-right-radius: 0.5rem;
-            "
+            class="w-full h-48 object-cover rounded-t-lg"
           />
         </div>
 
@@ -31,10 +27,7 @@
         </button>
 
         <div class="p-6 md:p-8 text-center space-y-4">
-          <h2
-            class="text-2xl font-bold text-charcoal"
-            :style="{ fontFamily: '--font-display' }"
-          >
+          <h2 class="text-2xl font-bold text-charcoal">
             Get <span class="text-golden-brown">₦500</span> Off your first
             order!
           </h2>
@@ -45,23 +38,26 @@
               v-model="email"
               placeholder="Enter your email address"
               required
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-              title="Please enter a valid email address (e.g., user@example.com)"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-golden-brown focus:border-golden-brown text-charcoal placeholder-gray-500"
             />
 
             <button
               type="submit"
-              :disabled="isFormInvalid"
+              :disabled="loading || isFormInvalid"
               class="w-full bg-navy-blue text-bone-white py-3 rounded-lg font-semibold uppercase tracking-wider transition-colors duration-300 cursor-pointer"
               :class="{
-                'hover:bg-golden-brown': !isFormInvalid,
-                'opacity-50 cursor-not-allowed': isFormInvalid,
+                'hover:bg-golden-brown': !isFormInvalid && !loading,
+                'opacity-50 cursor-not-allowed': loading || isFormInvalid,
               }"
             >
-              Claim your ₦500 credit
+              <span v-if="loading">Submitting...</span>
+              <span v-else>Claim your ₦500 credit</span>
             </button>
           </form>
+
+          <p v-if="message" :class="messageClass" class="text-sm mt-2">
+            {{ message }}
+          </p>
         </div>
       </div>
     </Transition>
@@ -69,30 +65,62 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, computed } from "vue"; 
+import { ref, computed, onMounted } from "vue";
+import { subscribeToNewsletter } from "@/services/api.js";
 
-const emit = defineEmits(["close", "signup"]);
 const email = ref("");
-const isVisible = ref(true);
+const isVisible = ref(false);
+const message = ref("");
+const loading = ref(false);
+
 const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
 
-const isFormInvalid = computed(() => {
-  return email.value === "" || !emailRegex.test(email.value);
-});
+const isFormInvalid = computed(() => email.value === "" || !emailRegex.test(email.value));
 
-const closeModal = () => {
+const messageClass = computed(() =>
+  message.value.includes("success") ? "text-green-500" : "text-red-500"
+);
+
+function showModal() {
+  isVisible.value = true;
+}
+
+function closeModal() {
   isVisible.value = false;
-  emit("close");
-};
+  localStorage.setItem("chuvi_subscribed", "true"); // ✅ remember user action
+}
 
-const claimCredit = () => {
-  
-  if (email.value && emailRegex.test(email.value)) {
-    emit("signup", email.value);
-    console.log(`Email captured: ${email.value}`);
-    closeModal();
+async function claimCredit() {
+  if (isFormInvalid.value) return;
+
+  loading.value = true;
+  message.value = "";
+
+  try {
+    const res = await subscribeToNewsletter({ email: email.value });
+    message.value = res.message || "Subscribed successfully!";
+    localStorage.setItem("chuvi_subscribed", "true"); // ✅ mark as subscribed
+    email.value = "";
+
+    // Close after success
+    setTimeout(() => closeModal(), 2000);
+  } catch (err) {
+    message.value = err.message || "Something went wrong. Please try again.";
+  } finally {
+    loading.value = false;
   }
-};
+}
+
+onMounted(() => {
+  // 🔍 Check if user already subscribed or closed modal before
+  const hasSubscribed = localStorage.getItem("chuvi_subscribed");
+  if (!hasSubscribed) {
+    // Optional: delay popup a few seconds after page load
+    setTimeout(() => {
+      showModal();
+    }, 4000);
+  }
+});
 </script>
 
 <style>

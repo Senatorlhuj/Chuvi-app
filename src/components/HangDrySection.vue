@@ -1,7 +1,7 @@
 <template>
   <section class="container mx-auto px-4 py-20">
     <h1 class="text-3xl md:text-4xl font-bold text-charcoal mb-2 md:mb-6 max-w-md">Hang Dry</h1>
-    <div class="flex flex-col lg:flex-row lg:space-x-24 items-start">
+    <div class="flex flex-col items-center jsutify-center lg:flex-row lg:space-x-24">
       <div class="lg:w-1/2 order-last md:order-first">
         <p class="text-lg text-charcoal mb-6 max-w-md">
           The perfect service for the delicates, activewear, and other items
@@ -15,30 +15,7 @@
           </p>
         </div>
 
-        <div class="bg-golden-brown p-6 rounded-xl mt-8 border border-gray-200">
-          <div
-            class="flex justify-between items-center py-2 border-b border-gray-200"
-          >
-            <span class="text-lg text-bone-white">Undergarments</span>
-            <span class="text-lg font-semibold text-bone-white">$1.50</span>
-          </div>
-          <div
-            class="flex justify-between items-center py-2 border-b border-gray-200"
-          >
-            <span class="text-lg text-bone-white">Shirt</span>
-            <span class="text-lg font-semibold text-bone-white">$4.95</span>
-          </div>
-          <div
-            class="flex justify-between items-center py-2 border-b border-gray-200"
-          >
-            <span class="text-lg text-bone-white">Synthetics / Activewear</span>
-            <span class="text-lg font-semibold text-bone-white">$4.95</span>
-          </div>
-          <div class="flex justify-between items-center py-2">
-            <span class="text-lg text-bone-white">All other items</span>
-            <span class="text-lg font-semibold text-bone-white">$6.95</span>
-          </div>
-        </div>
+       
       </div>
 
       <div class="lg:w-1/2 mt-10 lg:mt-0 mb-12 md:mb-0 flex justify-center lg:justify-end order-first md:order-last">
