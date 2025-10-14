@@ -98,62 +98,67 @@ export async function fetchUserProfile() {
     return authorizedFetch(`${USER_BASE_PATH}`, { method: 'GET' });
 }
 export async function updateProfile(updateData) {
-  return authorizedFetch(`${USER_BASE_PATH}`, {
-    method: 'PUT',
-    body: JSON.stringify(updateData),
-  });
+    return authorizedFetch(`${USER_BASE_PATH}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+    });
 }
-
+export async function updateUserProfile(profileData) {
+    return authorizedFetch(`${USER_BASE_PATH}/profile`, {
+        method: 'PUT',
+        body: JSON.stringify(profileData),
+    });
+}
 export async function updatePassword(passwordData) {
-  return authorizedFetch(`${USER_BASE_PATH}/password`, {
-    method: 'PUT',
-    body: JSON.stringify(passwordData),
-  });
+    return authorizedFetch(`${USER_BASE_PATH}/password`, {
+        method: 'PUT',
+        body: JSON.stringify(passwordData),
+    });
 }
 
 export async function fetchAddresses() {
-  return authorizedFetch(`${USER_BASE_PATH}/addresses`, { method: 'GET' });
+    return authorizedFetch(`${USER_BASE_PATH}/addresses`, { method: 'GET' });
 }
 
 export async function saveAddress(addressData) {
-  return authorizedFetch(`${USER_BASE_PATH}/addresses`, {
-    method: 'POST',
-    body: JSON.stringify(addressData),
-  });
+    return authorizedFetch(`${USER_BASE_PATH}/addresses`, {
+        method: 'POST',
+        body: JSON.stringify(addressData),
+    });
 }
 
 export async function updateAddress(addressId, addressData) {
-  return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
-    method: 'PUT',
-    body: JSON.stringify(addressData),
-  });
+    return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
+        method: 'PUT',
+        body: JSON.stringify(addressData),
+    });
 }
 
 export async function deleteAddress(addressId) {
-  if (!addressId) throw new Error("Address ID is required");
-  return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
-    method: 'DELETE',
-  });
+    if (!addressId) throw new Error("Address ID is required");
+    return authorizedFetch(`${USER_BASE_PATH}/addresses/${addressId}`, {
+        method: 'DELETE',
+    });
 }
 
 export async function updatePreferences(preferencesData) {
-  return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
-    method: 'PATCH',
-    body: JSON.stringify(preferencesData),
-  });
+    return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
+        method: 'PATCH',
+        body: JSON.stringify(preferencesData),
+    });
 }
 
 // --- FIXED MEMBERSHIP ---
 export async function joinMembership() {
-  return authorizedFetch(`api/users/membership/join`, {
-    method: 'POST', // was PUT, backend expects POST
-  });
+    return authorizedFetch(`api/users/membership/join`, {
+        method: 'POST', // was PUT, backend expects POST
+    });
 }
 
 export async function leaveMembership() {
-  return authorizedFetch(`api/users/membership/leave`, {
-    method: 'POST',
-  });
+    return authorizedFetch(`api/users/membership/leave`, {
+        method: 'POST',
+    });
 }
 
 
@@ -251,33 +256,33 @@ export async function createOrder(orderFormData) { // Accepts FormData object
     return null;
 }
 export async function getUserOrders(phone) {
-  try {
-    // --- Normalize to +234 format ---
-    let localPhone = phone.replace(/\D/g, '');
-    if (localPhone.startsWith('0')) {
-      localPhone = '+234' + localPhone.slice(1);
-    } else if (localPhone.startsWith('234')) {
-      localPhone = '+' + localPhone;
-    } else if (!localPhone.startsWith('+234')) {
-      localPhone = '+234' + localPhone;
+    try {
+        // --- Normalize to +234 format ---
+        let localPhone = phone.replace(/\D/g, '');
+        if (localPhone.startsWith('0')) {
+            localPhone = '+234' + localPhone.slice(1);
+        } else if (localPhone.startsWith('234')) {
+            localPhone = '+' + localPhone;
+        } else if (!localPhone.startsWith('+234')) {
+            localPhone = '+234' + localPhone;
+        }
+        console.log("🔍 Normalized phone:", localPhone);
+        console.log("➡️ Sending order to:", `/api/orders/user/${localPhone}`);
+
+        // --- Fetch (authorizedFetch already handles JSON/headers) ---
+        const data = await authorizedFetch(`/api/orders/user/${localPhone}`, {
+            method: 'GET',
+        });
+
+        // If API returns directly usable JSON, use it
+        return data;
+
+
+
+    } catch (error) {
+        console.error("Error in getUserOrders:", error);
+        throw new Error("Failed to fetch user orders. Please try again later.");
     }
-console.log("🔍 Normalized phone:", localPhone);
-    console.log("➡️ Sending order to:", `/api/orders/user/${localPhone}`);
-
-    // --- Fetch (authorizedFetch already handles JSON/headers) ---
-    const data = await authorizedFetch(`/api/orders/user/${localPhone}`, {
-      method: 'GET',
-    });
-
-    // If API returns directly usable JSON, use it
-    return data;
-
-    
-
-  } catch (error) {
-    console.error("Error in getUserOrders:", error);
-    throw new Error("Failed to fetch user orders. Please try again later.");
-  }
 }
 
 
@@ -296,8 +301,8 @@ export async function cancelUserOrder(orderId, noteData = {}) {
 }
 
 export async function trackOrderPublic(orderId) {
-  if (!orderId) throw new Error("Order ID is required");
-  return authorizedFetch(`api/orders/track/${orderId}`, { method: 'GET' });
+    if (!orderId) throw new Error("Order ID is required");
+    return authorizedFetch(`api/orders/track/${orderId}`, { method: 'GET' });
 }
 
 export async function createReview(reviewData) {
@@ -314,28 +319,28 @@ export async function getAllServicesCatalog() {
 // ==================== Notifications ====================
 
 export async function getNotifications() {
-  return authorizedFetch('api/notifications', { method: 'GET' });
+    return authorizedFetch('api/notifications', { method: 'GET' });
 }
 
 export async function markNotificationAsRead(notificationId) {
-  if (!notificationId) throw new Error('Notification ID is required');
-  return authorizedFetch(`api/notifications/${notificationId}/read`, { method: 'PATCH' });
+    if (!notificationId) throw new Error('Notification ID is required');
+    return authorizedFetch(`api/notifications/${notificationId}/read`, { method: 'PATCH' });
 }
 
 export async function markAllNotificationsAsRead() {
-  return authorizedFetch('api/notifications/read-all', { method: 'PATCH' });
+    return authorizedFetch('api/notifications/read-all', { method: 'PATCH' });
 }
 
 // ==================== Newsletter Subscription ====================
 export async function subscribeToNewsletter(emailData) {
-  if (!emailData || !emailData.email) {
-    throw new Error("Email is required for newsletter subscription");
-  }
+    if (!emailData || !emailData.email) {
+        throw new Error("Email is required for newsletter subscription");
+    }
 
-  return authorizedFetch('api/subscribe', {
-    method: 'POST',
-    body: JSON.stringify(emailData),
-  });
+    return authorizedFetch('api/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(emailData),
+    });
 }
 
 export async function getAllOrdersAdmin() {

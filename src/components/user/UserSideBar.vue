@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="w-64 bg-navy-blue p-6 shadow-2xl flex flex-col flex-shrink-0 min-h-full"
+    class="w-64 bg-charcoal p-6 shadow-2xl flex flex-col flex-shrink-0 min-h-full"
   >
    
     <div
@@ -27,7 +27,7 @@
         class="group flex items-center p-3 rounded-xl transition-all duration-200 ease-in-out"
         :class="[
           isActive(item.routeName)
-            ? 'bg-golden-brown text-navy-blue font-semibold shadow-lg transform translate-x-1'
+            ? 'bg-golden-brown text-bone-white font-semibold shadow-lg transform translate-x-1'
             : 'text-bone-white hover:bg-golden-brown/20 hover:text-golden-brown',
         ]"
       >
@@ -36,7 +36,7 @@
           class="w-5 h-5 mr-3 transition-colors duration-200"
           :class="
             isActive(item.routeName)
-              ? 'text-navy-blue'
+              ? 'text-bone-white'
               : 'text-golden-brown group-hover:text-golden-brown'
           "
         />
@@ -89,11 +89,12 @@ const { showSuccess } = useToast();
 const navItems = [
   { name: "My Profile", routeName: "UserProfile", icon: "user" },
   
-  { name: "Reviews", routeName: "UserReviews", icon: "star" },
-  { name: "Preferences", routeName: "UserPreferences", icon: "cogs" },
+  // { name: "Reviews", routeName: "UserReviews", icon: "star" },
+ 
   { name: "Subscription", routeName: "UserSubscription", icon: "crown" },
-  { name: 'Complaints', routeName: 'UserIssues', icon: 'triangle-exclamation'},
+  { name: 'My Bookings', routeName: 'UserIssues', icon: 'triangle-exclamation'},
   { name: "Referrals", routeName: "UserReferral", icon: "link" },
+   { name: "Help Center", routeName: "UserPreferences", icon: "cogs" },
 ];
 
 // emit event to close sidebar

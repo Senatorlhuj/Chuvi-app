@@ -11,7 +11,7 @@
     </label>
 
     <!-- Custom Select Dropdown -->
-    <div class="relative" ref="selectWrapper">
+    <div class="relative inline-block" ref="selectWrapper">
       <!-- Selected Value Display -->
       <button
         type="button"
@@ -23,12 +23,15 @@
         @keydown.down.prevent="navigateOptions(1)"
         @keydown.up.prevent="navigateOptions(-1)"
         :disabled="disabled"
-        class="appearance-none block w-full p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left text-navy-blue font-medium transition-all duration-30 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        :class="[
+          'appearance-none block p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left font-medium transition-all duration-30 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
+          widthClass,
+        ]"
       >
         <span v-if="selectedOption" class="block truncate">
           {{ selectedOption.label }}
         </span>
-        <span v-else class="block truncate text-gray-400">
+        <span v-else class="block truncate ">
           {{ placeholder }}
         </span>
       </button>
@@ -65,7 +68,8 @@
       >
         <div
           v-if="isOpen"
-          class="absolute z-50 w-full mt-2 bg-bone-white rounded-lg max-h-60 overflow-auto"
+          class="absolute z-50 mt-2 bg-bone-white rounded-lg max-h-60 overflow-auto"
+          :class="widthClass"
         >
           <ul>
             <li
@@ -73,11 +77,10 @@
               :key="option.value"
               @click="selectOption(option)"
               @mouseenter="highlightedIndex = index"
-              class="px-3 py-2.5 cursor-pointer text-navy-blue transition-all duration-150 font-medium"
+              class="px-3 py-2.5 cursor-pointer transition-all duration-150 font-medium"
               :class="{
-                'bg-charcoal !text-cream/60': highlightedIndex === index,
-                // ' bg-charcoal': modelValue === option.value,
-                '!hover:bg-charcoal text-cream/60': highlightedIndex !== index,
+                'bg-charcoal !text-bone-white': highlightedIndex === index,
+                'text-charcoal': highlightedIndex !== index,
               }"
             >
               <div class="flex items-center justify-between">
@@ -107,7 +110,7 @@
     <!-- Helper Text -->
     <p
       v-if="helperText"
-      class="text-xs text-gray-600 mt-1 transition-opacity duration-200"
+      class="text-xs  mt-1 transition-opacity duration-200"
     >
       {{ helperText }}
     </p>
@@ -152,6 +155,11 @@ const props = defineProps({
   helperText: {
     type: String,
     default: null,
+  },
+ 
+  widthClass: {
+    type: String,
+    default: "w-48",
   },
 });
 

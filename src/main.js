@@ -55,12 +55,12 @@ import {
   faCog,
   faCrown,
   faHeart,
-  faTachometerAlt,    
-  faMapMarkedAlt,   
-  faWallet,         
+  faTachometerAlt,
+  faMapMarkedAlt,
+  faWallet,
   faCalendarPlus,
   faTriangleExclamation,
-  faCommentDots, 
+  faCommentDots,
   faStarHalfAlt, // half star
   faStar,        // solid star
   faExclamationTriangle,
@@ -78,8 +78,18 @@ import {
   faMobileAlt,
   faGlobe,
   faChartLine,
-  faUsers
-  
+  faUsers,
+  faSave,
+  faPen,
+  faKey,
+  faUpload,
+  faSlidersH,
+  faEyeSlash,
+  faEye,
+  faCopy
+
+
+
 } from '@fortawesome/free-solid-svg-icons';
 
 // Regular icons
@@ -141,12 +151,12 @@ library.add(
   faCog,
   faCrown,
   faHeart,
-  faTachometerAlt,    
-  faMapMarkedAlt,   
-  faWallet,         
+  faTachometerAlt,
+  faMapMarkedAlt,
+  faWallet,
   faCalendarPlus,
   faTriangleExclamation,
-  faCommentDots, 
+  faCommentDots,
   faStarHalfAlt,
   faStar,        // solid star
   farStar,       // regular star (empty)
@@ -168,7 +178,15 @@ library.add(
   faMobileAlt,
   faGlobe,
   faChartLine,
-  faUsers
+  faUsers,
+  faSave,
+  faPen,
+  faKey,
+  faUpload,
+  faSlidersH,
+  faEyeSlash,
+  faEye,
+  faCopy
 );
 
 // Register GSAP plugins
