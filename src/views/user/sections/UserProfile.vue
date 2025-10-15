@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen text-charcoal font-display pb-20 mt-10">
     <header
-      class="border-b border-gray-200 bg-white/70 backdrop-blur-md p-4 md:p-6 flex flex-col md:flex-row justify-between items-center"
+      class="max-w-6xl mx-auto border-b border-gray-200 bg-white/70 backdrop-blur-md p-4 md:p-6 flex flex-col md:flex-row justify-between items-center"
     >
       <h1 class="text-3xl md:text-4xl font-bold text-charcoal">My Profile</h1>
       <button
@@ -18,7 +18,7 @@
       <section
         class="bg-white rounded-2xl border border-golden-brown/30 p-6 flex flex-col md:flex-row items-center gap-10"
       >
-        <div class="relative bg-charcoal/30  rounded-full">
+        <div class="relative bg-charcoal/30 rounded-full">
           <img
             :src="photoUrl"
             alt="Profile"
@@ -28,9 +28,13 @@
           <button
             class="absolute bottom-0 right-0 bg-charcoal text-bone-white p-2 rounded-full hover:bg-golden-brown transition cursor-pointer"
             @click="triggerPhotoUpload"
-            :title="'Upload new photo'"
+            :title="isUploadingPhoto ? 'Uploading...' : 'Upload new photo'"
+            :disabled="isUploadingPhoto"
           >
-            <font-awesome-icon :icon="['fas', 'pen']" />
+            <font-awesome-icon
+              :icon="isUploadingPhoto ? ['fas', 'spinner'] : ['fas', 'pen']"
+              :spin="isUploadingPhoto"
+            />
           </button>
           <input
             ref="photoInput"
@@ -38,6 +42,7 @@
             accept="image/*"
             class="hidden"
             @change="handlePhotoUpload"
+            :disabled="isUploadingPhoto"
           />
         </div>
 
@@ -53,7 +58,7 @@
 
           <div class="grid md:grid-cols-2 gap-4">
             <ProfileField label="Phone:" v-model:value="form.phone" editable />
-            <ProfileField label="LGA:" v-model:value="form.lga" editable />
+            <ProfileField label="Gender:" :value="form.gender" />
           </div>
 
           <div class="flex flex-wrap gap-3 mt-4">
@@ -63,16 +68,6 @@
             >
               <font-awesome-icon :icon="['fas', 'key']" />
               <span>Change Password</span>
-            </button>
-            <button
-              @click="triggerPhotoUpload"
-              class="flex items-center space-x-2 px-4 py-2 bg-golden-brown text-bone-white rounded-md hover:bg-charcoal transition cursor-pointer"
-              :disabled="isUploadingPhoto"
-            >
-              <font-awesome-icon :icon="['fas', 'upload']" />
-              <span>{{
-                isUploadingPhoto ? "Uploading..." : "Upload New Photo"
-              }}</span>
             </button>
           </div>
         </div>
@@ -170,11 +165,21 @@
               />
               <div>
                 <p class="font-semibold text-navy-blue">{{ addr.label }}</p>
-                <p class="text-sm text-gray-700">
-                  {{ addr.line1 }}{{ addr.line2 ? ", " + addr.line2 : "" }}
+                <p class="text-sm text-gray-500 mb-2">
+                  <span>Address 1:</span> {{ addr.line1 }}
                 </p>
-                <p class="text-sm text-gray-500">
-                  {{ addr.city }}, **{{ addr.lga }}**, {{ addr.state }}
+                <p class="text-sm text-gray-500 mb-2">
+                  <span>Address 2:</span>
+                  {{ addr.line2 ? ", " + addr.line2 : "" }}
+                </p>
+                <p class="text-sm text-gray-500 mb-2">
+                  <span>City:</span> {{ addr.city }}
+                </p>
+                <p class="text-sm text-gray-500 mb-2">
+                  <span>LGA: </span> {{ addr.lga }}
+                </p>
+                <p class="text-sm text-gray-500 mb-2">
+                  <span>State: </span> {{ addr.state }}
                 </p>
                 <p v-if="addr.landmark" class="text-sm text-gray-400 italic">
                   Landmark: {{ addr.landmark }}
@@ -419,7 +424,10 @@
       class="fixed inset-0 flex items-center justify-center z-50 p-4 modal-backdrop"
     >
       <div class="bg-white rounded-lg p-6 max-w-md w-full">
-        <h3 class="text-xl font-bold mb-4 text-navy-blue">Change Password</h3>
+        <h3 class="text-xl font-bold mb-4 text-navy-blue">New Password</h3>
+        <p class="text-sm mb-4 text-charcoal">
+          Your new password must be different from previously used passwords.
+        </p>
         <form @submit.prevent="handleChangePassword" class="grid gap-4">
           <div class="relative">
             <label class="text-sm font-semibold block mb-1"
@@ -544,6 +552,7 @@ import { useUser } from "@/composables/useUser";
 import { useToast } from "@/composables/useToast";
 import {
   updateUserProfile,
+  updateProfilePhoto, // <-- NEW IMPORT
   updatePassword,
   fetchAddresses,
   saveAddress,
@@ -560,7 +569,7 @@ const { showToast } = useToast();
 const showDeleteConfirm = ref(false);
 const deleteTargetId = ref(null);
 
-// FIX: Initialized 'lga' here so it can be used in the ProfileField component
+// Form fields for profile text updates
 const form = ref({ fullName: "", email: "", phone: "", lga: "" });
 
 const preferences = ref({
@@ -572,15 +581,14 @@ const preferences = ref({
 const addresses = ref([]);
 const isLoadingAddresses = ref(false);
 
-const isUpdatingProfile = ref(false);
-
+const isUpdatingProfile = ref(false); // For text field updates
 const isSavingPreferences = ref(false);
 const isJoining = ref(false);
 const isLeaving = ref(false);
 const isDeletingAddress = ref(false);
 const isSavingAddress = ref(false);
 const isChangingPassword = ref(false);
-const isUploadingPhoto = ref(false);
+const isUploadingPhoto = ref(false); // For photo upload ONLY
 
 const fragranceOptions = ["Lavender", "Rose", "Vanilla", "Unscented"];
 const fragranceOptionsFormatted = fragranceOptions.map((v) => ({
@@ -603,7 +611,6 @@ const showPasswordModal = ref(false);
 const editingAddress = ref(null);
 const photoInput = ref(null);
 
-// address form default state defaulted to Anambra and readonly
 const addressForm = ref({
   label: "",
   line1: "",
@@ -627,7 +634,7 @@ const showConfirm = ref(false);
 onMounted(async () => {
   await loadUser();
   if (profile.value) {
-    // FIX: Mapped the 'lga' field from the profile object on load
+    // Mapped the 'lga' field from the profile object on load
     form.value = {
       fullName: profile.value.fullName || "",
       email: profile.value.email || "",
@@ -656,7 +663,6 @@ const loadAddresses = async () => {
   try {
     isLoadingAddresses.value = true;
     const data = await fetchAddresses();
-    // Assuming data is an array of addresses or an object with an 'addresses' key
     addresses.value = data?.addresses || data || [];
   } catch (err) {
     console.error("Failed to load addresses:", err);
@@ -719,7 +725,7 @@ const handleSaveAddress = async () => {
       showToast("Address added successfully", "success");
     }
     closeAddressModal();
-    // This is the key to seeing the new LGA: reloading the addresses after saving/editing
+    // reloading the addresses after saving/editing
     await loadAddresses();
   } catch (err) {
     console.error("Save address error:", err);
@@ -768,7 +774,7 @@ const cancelDeleteAddress = () => {
   deleteTargetId.value = null;
 };
 
-/* ---------- Profile Update ---------- */
+/* ---------- Profile Update (Text Fields) ---------- */
 const handleUpdateProfile = async () => {
   isUpdatingProfile.value = true;
   try {
@@ -790,28 +796,23 @@ const handleUpdateProfile = async () => {
   }
 };
 
-/* ---------- Photo Upload ---------- */
+
 const triggerPhotoUpload = () => {
+  if (isUploadingPhoto.value) return; 
   photoInput.value?.click();
 };
-
 const handlePhotoUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   try {
     const formData = new FormData();
-    formData.append("profilePicture", file);
-    // Include other profile fields when updating with a file
-    formData.append("fullName", profile.value.fullName || "");
-    formData.append("phone", profile.value.phone || "");
-    formData.append("lga", profile.value.lga || "");
+    formData.append("photo", file); // ✅ must match upload.single('photo')
 
-    isUpdatingProfile.value = true;
     isUploadingPhoto.value = true;
 
-    // NOTE: This call updates both profile data and the picture.
-    const updatedProfile = await updateUserProfile(formData);
+    const updatedProfile = await updateProfilePhoto(formData);
+
     profile.value = updatedProfile.user || updatedProfile;
 
     showToast("Profile picture updated successfully!", "success");
@@ -819,17 +820,17 @@ const handlePhotoUpload = async (event) => {
     console.error("Error uploading profile photo:", err);
     showToast("Failed to update profile picture", "error");
   } finally {
-    isUpdatingProfile.value = false;
     isUploadingPhoto.value = false;
     if (photoInput.value) photoInput.value.value = "";
   }
 };
 
-// Reactive image URL that forces refresh after upload
 const photoUrl = computed(() => {
   const user = profile.value;
-  if (!user) return "/default-avatar.png";
-  return user.photoUrl || user.avatarUrl || "/default-avatar.png";
+  if (!user || !user.photoUrl) {
+    return "/profileAvatar.png";
+  }
+  return user.photoUrl;
 });
 
 /* ---------- Preferences ---------- */
@@ -935,18 +936,16 @@ const copyToClipboard = async (text) => {
   }
 };
 
-// FIX: This watcher is now set to be more robust, ensuring the image URL is updated
-// with a unique timestamp immediately after the profile changes due to an upload.
 watch(
   profile,
   (newProfile) => {
+    
     if (newProfile && newProfile.photoUrl) {
-      // Append a new timestamp query parameter to bust the browser cache
       newProfile.photoUrl =
         newProfile.photoUrl.split("?")[0] + `?t=${Date.now()}`;
     }
   },
-  { immediate: true, deep: true } // Added immediate:true and deep:true for reliability
+  { immediate: true, deep: true }
 );
 </script>
 
@@ -1001,7 +1000,8 @@ watch(
   background-color: #27b8a7;
 }
 
-.bg-destructive { /* Mapping from previous context/guidelines */
-    background-color: #dc2626; 
+.bg-destructive {
+  /* Mapping from previous context/guidelines */
+  background-color: #dc2626;
 }
 </style>

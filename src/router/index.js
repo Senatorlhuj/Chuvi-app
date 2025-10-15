@@ -5,7 +5,7 @@ import AdminRegister from '@/views/admin/auth/AdminRegister.vue';
 import AdminDashboard from '@/views/admin/AdminDashboard.vue';
 import EmployeeCreate from '@/views/admin/EmployeeCreate.vue';
 import CouponManager from '@/views/admin/CouponManager.vue';
-import OrderUpdateStatus from '@/views/admin/OrderUpdateStatus.vue';
+import ManageOrders from '@/views/admin/ManageOrders.vue';
 import AdminReviewsManager from '@/views/admin/AdminReviewsManager.vue';
 import AdminIssues from '@/views/admin/AdminIssues.vue';
 
@@ -26,7 +26,7 @@ import ContactPage from "@/views/publicPages/ContactPage.vue";
 
 
 import OrderSuccess from '@/views/user/OrderSuccess.vue';
-import OrderStatus from '@/views/user/OrderStatus.vue';
+import TrackOrder from '@/views/user/TrackOrder.vue';
 import BookPickup from '@/views/user/BookPickup.vue';
 import OrderItemSelector from '@/views/user/OrderItemSelector.vue';
 
@@ -37,13 +37,10 @@ import ResetPassword from '@/views/user/auth/resetPassword.vue';
 import VerifyPhone from '@/views/user/auth/verifyPhone.vue';
 
 import UserProfile from '@/views/user/sections/UserProfile.vue';
-import UserAddressManager from '@/views/user/sections/UserAddressManager.vue';
-import UserPreferences from '@/views/user/sections/UserPreferences.vue';
-import UserMembership from '@/views/user/sections/UserMembership.vue';
+import HelpCenter from '@/views/user/sections/HelpCenter.vue';
 import UserReferral from '@/views/user/sections/UserReferral.vue';
-import UserReviews from '@/views/user/sections/UserReviews.vue';
 import UserSubscription from '@/views/user/sections/UserSubscription.vue';
-import UserIssues from '@/views/user/sections/UserIssues.vue';
+import MyBookings from '@/views/user/sections/MyBookings.vue';
 import UserNotifications from '@/views/user/sections/UserNotifications.vue';
 
 const routes = [
@@ -63,21 +60,23 @@ const routes = [
     component: UserDashboardLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: 'order-success', component: OrderSuccess, name: 'OrderSuccess' },
-      { path: 'order-status', component: OrderStatus, name: 'OrderStatus' },
+      {
+        path: '/order-success/:orderId',
+        name: 'OrderSuccess',
+        component: OrderSuccess,
+        props: true,
+      },
+      { path: 'orders/:id/track', name: 'TrackOrder', component: TrackOrder, props: true },
+
       { path: 'book-pick-up', name: 'BookPickup', component: BookPickup },
       { path: '/order/select-items', name: 'ItemSelection', component: OrderItemSelector },
       { path: '/order/pickup-delivery', name: 'PickupDelivery', component: () => import('@/views/user/PickupDeliveryView.vue') },
       { path: '/summary', name: 'OrderSummary', component: () => import('@/views/user/OrderSummary.vue') },
-      { path: '/confirmation', name: 'OrderConfirmation', component: () => import('@/views/user/OrderConfirmation.vue') },
       { path: 'profile', name: 'UserProfile', component: UserProfile },
-      { path: 'address', name: 'UserAddressManager', component: UserAddressManager },
-      { path: 'preferences', name: 'UserPreferences', component: UserPreferences },
-      { path: 'membership', name: 'UserMembership', component: UserMembership },
-      { path: 'reviews', name: 'UserReviews', component: UserReviews },
+      { path: 'help-center', name: 'HelpCenter', component: HelpCenter },
       { path: 'subscriptions', name: 'UserSubscription', component: UserSubscription },
-      { path: 'complaints', name: 'UserIssues', component: UserIssues },
-      { path: 'referral', name: 'UserReferral', component: UserReferral },
+      { path: 'order-history', name: 'orderHistory', component: MyBookings },
+      { path: 'my-referrals', name: 'UserReferral', component: UserReferral },
       { path: 'notification', name: 'UserNotifications', component: UserNotifications },
     ],
   },
@@ -90,7 +89,7 @@ const routes = [
       { path: 'employees/create', name: 'AdminEmployeeCreate', component: EmployeeCreate },
       { path: 'coupons', name: 'AdminCouponManager', component: CouponManager },
       { path: 'services/config', name: 'AdminServiceConfig', component: () => import('@/views/admin/ServiceConfig.vue') },
-      { path: 'orders/status-update', redirect: { name: 'StaffOrderStatusUpdate' } },
+      { path: 'orders/manage-orders', redirect: { name: 'ManageOrders' } },
       { path: 'reviews/all-reviews', redirect: { name: 'StaffReviewsManager' } },
       { path: 'issues/all-issues', redirect: { name: 'StaffIssues' } },
     ],
@@ -100,7 +99,7 @@ const routes = [
     component: StaffLayout,
     meta: { requiresAuth: true, requiresStaff: true },
     children: [
-      { path: 'orders/status-update', name: 'StaffOrderStatusUpdate', component: OrderUpdateStatus },
+      { path: 'orders/manage-orders', name: 'ManageOrders', component: ManageOrders },
       { path: 'reviews/manager', name: 'StaffReviewsManager', component: AdminReviewsManager },
       { path: 'issues/manager', name: 'StaffIssues', component: AdminIssues },
     ],

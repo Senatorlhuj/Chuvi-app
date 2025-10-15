@@ -73,7 +73,7 @@
           <p class="font-medium text-navy-blue">Manage Coupons</p>
         </router-link>
         <router-link
-          :to="{ name: 'StaffOrderStatusUpdate' }"
+          :to="{ name: 'ManageOrders' }"
           class="p-4 bg-cream rounded-lg text-center border border-transparent hover:border-golden-brown transition-border"
         >
           <font-awesome-icon

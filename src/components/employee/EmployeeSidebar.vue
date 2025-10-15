@@ -16,8 +16,8 @@
 
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
-        name="Update Order Status"
-        :to="{ name: 'StaffOrderStatusUpdate' }"
+        name="Manage Orders"
+        :to="{ name: 'ManageOrders' }"
       />
       <SidebarLink
         icon="fa-solid fa-star"
@@ -60,8 +60,8 @@
       
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
-        name="Update Order Status"
-        :to="{ name: 'StaffOrderStatusUpdate' }"
+        name="Manage Orders"
+        :to="{ name: 'ManageOrders' }"
         @click="$emit('closeSidebar')"
       />
       <SidebarLink

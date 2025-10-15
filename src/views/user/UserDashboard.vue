@@ -47,7 +47,7 @@ import {
 const menuItems = ref([
     { id: 'profile', label: 'My Profile', icon: faUser, routeName: 'UserProfile' },
     { id: 'address', label: 'Saved Addresses', icon: faMapMarkerAlt, routeName: 'UserAddressManager' },
-    { id: 'prefs', label: 'Preferences', icon: faCog, routeName: 'UserPreferences' },
+    { id: 'help', label: 'Help Center', icon: faCog, routeName: 'HelpCenter' },
     { id: 'member', label: 'Membership', icon: faCrown, routeName: 'UserMembership' },
     { id: 'credits', label: 'Referral Credits', icon: faHeart, routeName: 'UserCredits' }, 
 ]);

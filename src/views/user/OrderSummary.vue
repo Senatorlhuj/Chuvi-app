@@ -14,7 +14,7 @@
               Selected Items ({{ totalItemCount }} Items)
             </h2>
             <button
-              @click="router.push({ name: 'ItemSelection' })"
+              @click="router.push({ name: 'BookPickup' })"
               class="text-sm text-golden-brown hover:underline font-extrabold cursor-pointer"
             >
               Edit
@@ -27,15 +27,15 @@
             class="flex justify-between py-2 border-b border-input last:border-b-0"
           >
             <div>
-              <span class="text-navy-blue font-medium">{{
-                item.serviceName
-              }}</span>
-              <span class="text-xs text-charcoal/70 ml-2"
-                >[{{ item.serviceCode }}]</span
-              >
-              <span class="text-xs text-charcoal/70 ml-2"
-                >({{ orderPayload.pricingModel }})</span
-              >
+              <span class="text-navy-blue font-medium">
+                {{ item.serviceName }}
+              </span>
+              <span class="text-xs text-charcoal/70 ml-2">
+                [{{ item.serviceCode }}]
+              </span>
+              <span class="text-xs text-charcoal/70 ml-2">
+                ({{ orderPayload.pricingModel }})
+              </span>
             </div>
             <span class="text-charcoal">
               {{ item.quantity }} × ₦{{ item.price?.toLocaleString() }}
@@ -77,7 +77,7 @@
                 </p>
                 <p class="text-sm text-charcoal/60">
                   {{ orderPayload.pickup?.address?.line1 }},
-                  {{ orderPayload.pickup?.address?.city }} ,
+                  {{ orderPayload.pickup?.address?.city }},
                   {{ orderPayload.pickup?.address?.state }}
                 </p>
               </div>
@@ -93,8 +93,8 @@
                   }})
                 </p>
                 <p class="text-sm text-charcoal/60">
-                  {{ orderPayload.delivery?.address?.line1 }} ,
-                  {{ orderPayload.delivery?.address?.city }} ,
+                  {{ orderPayload.delivery?.address?.line1 }},
+                  {{ orderPayload.delivery?.address?.city }},
                   {{ orderPayload.delivery?.address?.state }}
                 </p>
               </div>
@@ -116,9 +116,9 @@
           <div v-if="orderPayload.couponCode" class="mb-3">
             <p class="text-sm text-charcoal">
               <span class="font-semibold">Coupon:</span>
-              <span class="text-golden-brown ml-1">{{
-                orderPayload.couponCode
-              }}</span>
+              <span class="text-golden-brown ml-1">
+                {{ orderPayload.couponCode }}
+              </span>
             </p>
           </div>
 
@@ -131,7 +131,9 @@
                 v-for="(file, i) in orderPayload.photos"
                 :key="i"
                 :src="
-                  typeof file === 'string' ? file : URL.createObjectURL(file)
+                  typeof file === 'string'
+                    ? file
+                    : win?.URL.createObjectURL(file)
                 "
                 class="h-24 w-full object-cover rounded-lg border border-golden-brown shadow-sm"
               />
@@ -155,10 +157,6 @@
             <div class="flex justify-between">
               <span>Item Subtotal:</span>
               <span>₦{{ subtotal.toLocaleString() }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Service Fee (1%):</span>
-              <span>₦{{ serviceFee.toLocaleString() }}</span>
             </div>
             <div class="flex justify-between">
               <span>Delivery Fee:</span>
@@ -265,7 +263,11 @@
           viewBox="0 0 20 20"
           fill="currentColor"
         >
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd"
+          />
         </svg>
 
         <svg
@@ -275,7 +277,11 @@
           viewBox="0 0 20 20"
           fill="currentColor"
         >
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-2-8a2 2 0 114 0 2 2 0 01-4 0z" clip-rule="evenodd" />
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm-2-8a2 2 0 114 0 2 2 0 01-4 0z"
+            clip-rule="evenodd"
+          />
         </svg>
 
         <p class="text-lg font-semibold text-cream">
@@ -287,25 +293,45 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useOrderItems } from "@/composables/useOrderItems";
-import { authorizedFetch } from "@/services/api.js";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { authorizedFetch, previewOrder } from "@/services/api.js";
 import CustomSelect from "@/components/atoms/CustomSelect.vue";
 import { useUser } from "@/composables/useUser";
 
 const { user, loadUser } = useUser();
 const isAwaitingPayment = ref(false);
+const win = typeof window !== "undefined" ? window : undefined;
+const orderStore = useOrderStore();
+
 const overlayMessage = ref("Waiting for payment confirmation...");
-const overlayState = ref("waiting"); // 'waiting' | 'success' | 'failed'
+const overlayState = ref("waiting");
 let pollingInterval = null;
 let pollingTimeout = null;
 
 const router = useRouter();
 const { orderPayload, totalItemCount } = useOrderItems();
+// --- DEFAULT PAYMENT SELECTIONS ---
+if (!orderPayload.value.payment) {
+  orderPayload.value.payment = {};
+}
+
+if (!orderPayload.value.payment.method) {
+  orderPayload.value.payment.method = "BANK_TRANSFER";
+}
+
+if (!orderPayload.value.payment.gateway) {
+  orderPayload.value.payment.gateway = "PAYSTACK";
+}
+
+if (!orderPayload.value.payment.mode) {
+  orderPayload.value.payment.mode = "FULL";
+}
+
 const isSubmitting = ref(false);
 
-// --- PAYMENT OPTIONS ---
 const paymentMethods = [
   { label: "Debit/Credit Card", value: "CARD" },
   { label: "Bank Transfer", value: "BANK_TRANSFER" },
@@ -319,24 +345,50 @@ const paymentModes = [
   { label: "Installment", value: "INSTALLMENT" },
 ];
 
-// --- COMPUTED TOTALS ---
+// --- COMPUTED TOTALS (no service fee) ---
 const subtotal = computed(() =>
   orderPayload.value.items.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0
   )
 );
-const deliveryFee = computed(() => (subtotal.value < 10000 ? 1000 : 0));
-const serviceFee = computed(() => Math.round(subtotal.value * 0.01));
-const discount = computed(() =>
-  orderPayload.value.couponCode ? Math.round(subtotal.value * 0.1) : 0
+// --- BACKEND TOTALS ---
+const deliveryFee = ref(0);
+const discount = ref(0);
+const finalTotal = ref(0);
+
+const fetchPreviewTotals = async () => {
+  try {
+    const payload = cleanPayload(orderPayload.value);
+    console.log("📦 Sending preview payload:", payload);
+    const previewData = await previewOrder(payload);
+
+    console.log("📬 Received preview data:", previewData);
+    if (previewData?.totals) {
+      deliveryFee.value = previewData.totals.deliveryFee || 0;
+      discount.value = previewData.totals.discount || 0;
+      finalTotal.value = previewData.totals.grandTotal || 0;
+    } else {
+      console.warn("⚠️ Unexpected preview response:", previewData);
+    }
+  } catch (err) {
+    console.error("❌ Failed to fetch order preview:", err);
+  }
+};
+
+// Fetch preview totals whenever key parts of the payload change
+watch(
+  () => [
+    orderPayload.value.items,
+    orderPayload.value.pickup,
+    orderPayload.value.delivery,
+    orderPayload.value.couponCode,
+  ],
+  fetchPreviewTotals,
+  { deep: true, immediate: true }
 );
-const finalTotal = computed(() =>
-  Math.max(
-    0,
-    subtotal.value + deliveryFee.value + serviceFee.value - discount.value
-  )
-);
+onMounted(fetchPreviewTotals);
+
 const isPaymentInvalid = computed(() => {
   const payment = orderPayload.value.payment;
   return !payment.method || !payment.gateway || !payment.mode;
@@ -371,46 +423,39 @@ const cleanPayload = (payload) => {
   return copy;
 };
 
-// --- POLLING (uses api/orders/track/:orderId) ---
+// --- POLLING ---
 const pollOrderStatus = (orderId) => {
-  // clear any previous
   if (pollingInterval) clearInterval(pollingInterval);
   if (pollingTimeout) clearTimeout(pollingTimeout);
 
-  // stop polling after 120s (2 minutes)
   pollingTimeout = setTimeout(() => {
     if (pollingInterval) clearInterval(pollingInterval);
-    overlayMessage.value = "Timed out waiting for payment confirmation. Please check your payment and try again.";
+    overlayMessage.value = "Timed out waiting for payment confirmation.";
     overlayState.value = "failed";
-    setTimeout(() => { isAwaitingPayment.value = false; }, 3000);
+    setTimeout(() => {
+      isAwaitingPayment.value = false;
+    }, 3000);
   }, 120000);
 
   pollingInterval = setInterval(async () => {
     try {
-      // use the correct endpoint as you confirmed
       const resp = await authorizedFetch(`api/orders/track/${orderId}`, {
         method: "GET",
       });
-
-      console.log("Polling response:", resp);
       const paymentStatus = resp?.order?.payment?.status;
       const orderStatus = resp?.order?.status;
 
-      // success conditions (backend sets payment.status = "PAID" on webhook)
       if (paymentStatus === "PAID" || orderStatus === "Booked") {
         clearInterval(pollingInterval);
         clearTimeout(pollingTimeout);
         overlayState.value = "success";
-        overlayMessage.value = "✅ Payment confirmed! Redirecting...";
+        overlayMessage.value = "Payment confirmed! Redirecting...";
         setTimeout(() => {
           isAwaitingPayment.value = false;
-          router.push({ name: "OrderConfirmation", params: { id: orderId } });
+          orderStore.setOrder(orderId, resp.order);
+          router.push({ name: "OrderSuccess", params: { orderId } });
         }, 1200);
-        return;
-      }
-
-      // failure conditions
-      if (paymentStatus === "FAILED" || orderStatus === "Pending") {
+      } else if (paymentStatus === "FAILED") {
         clearInterval(pollingInterval);
         clearTimeout(pollingTimeout);
         overlayState.value = "failed";
@@ -418,15 +463,14 @@ const pollOrderStatus = (orderId) => {
         setTimeout(() => {
           isAwaitingPayment.value = false;
         }, 3000);
-        return;
       }
     } catch (err) {
-      // log full error for easier debugging
       console.error("Polling error:", err);
     }
   }, 4000);
 };
 
+// --- SUBMIT ORDER ---
 // --- SUBMIT ORDER ---
 const submitOrder = async () => {
   if (!(await canSubmit())) return;
@@ -435,66 +479,89 @@ const submitOrder = async () => {
   try {
     isSubmitting.value = true;
 
-    let payload = {
-      ...orderPayload.value,
-      finalTotal: finalTotal.value,
-      subtotal: subtotal.value,
-      deliveryFee: deliveryFee.value,
-      serviceFee: serviceFee.value,
-      discount: discount.value,
-      payment: { ...orderPayload.value.payment },
+    // ✅ Construct backend-compatible payload
+    const payload = {
+      items: orderPayload.value.items.map((item) => ({
+        serviceCode: item.serviceCode,
+        serviceName: item.serviceName,
+        quantity: item.quantity,
+        unit: item.unit,
+        price: item.price,
+        express: item.express || false,
+        sameDay: item.sameDay || false,
+        addOns: item.addOns || [],
+      })),
+
+      pricingModel: orderPayload.value.pricingModel || "RETAIL",
+      serviceTier: orderPayload.value.serviceTier || "STANDARD",
+
+      pickup: orderPayload.value.pickup,
+      delivery: orderPayload.value.delivery,
+
+      payment: {
+        method: orderPayload.value.payment.method,
+        mode: orderPayload.value.payment.mode,
+        gateway: orderPayload.value.payment.gateway,
+      },
+
+      totals: {
+        itemsTotal: subtotal.value,
+        addOnsTotal: 0,
+        deliveryFee: deliveryFee.value,
+        discount: discount.value,
+        grandTotal: finalTotal.value || subtotal.value,
+      },
+
+      photos:
+        Array.isArray(orderPayload.value.photos) &&
+        orderPayload.value.photos.length > 0
+          ? orderPayload.value.photos.filter((p) => typeof p === "string")
+          : [],
     };
 
-    payload = cleanPayload(payload);
+    // Clean up payload (optional)
+    const cleaned = cleanPayload(payload);
+    console.log(
+      "🟢 Payload sent to backend:",
+      JSON.stringify(cleaned, null, 2)
+    );
 
-    console.log("Payload sent to backend:", JSON.stringify(payload, null, 2));
-
+    // ✅ Send to backend
     const response = await authorizedFetch("api/orders", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(cleaned),
     });
 
-    console.log("Order creation response:", response);
+    console.log("🟢 Order response:", response);
 
     const orderId = response?.order?._id || response?.order?.id || response?.id;
 
-    // if backend returned checkout url -> open in new tab and poll using /api/orders/track/:orderId
+    // ✅ Handle payment redirect or direct confirmation
     if (response?.order?.payment?.checkoutUrl) {
       isAwaitingPayment.value = true;
       overlayState.value = "waiting";
       overlayMessage.value = "Redirecting you to payment...";
-
-      // open payment in a new tab
       window.open(response.order.payment.checkoutUrl, "_blank");
 
-      // start polling using the confirmed endpoint
       if (orderId) pollOrderStatus(orderId);
-      else {
-        console.warn("No orderId returned — cannot poll. Hiding overlay in 3s.");
-        setTimeout(() => { isAwaitingPayment.value = false; }, 3000);
-      }
     } else {
-      // fallback: if backend didn't return checkoutUrl, navigate directly (create may already mark paid)
-      router.push({
-        name: "OrderConfirmation",
-        params: { id: orderId },
-      });
+      orderStore.setOrder(orderId, response.order);
+      router.push({ name: "OrderSuccess", params: { orderId } });
     }
   } catch (err) {
-    console.error("Order submission failed:", err);
-    // attempt to show friendly message returned from server (if any)
-    if (err.message) {
-      overlayState.value = "failed";
-      overlayMessage.value = `Order failed: ${err.message}`;
-      isAwaitingPayment.value = true;
-      setTimeout(() => { isAwaitingPayment.value = false; }, 4000);
-    }
+    console.error("❌ Order submission failed:", err);
+    overlayState.value = "failed";
+    overlayMessage.value = `Order failed: ${err.message}`;
+    isAwaitingPayment.value = true;
+
+    setTimeout(() => {
+      isAwaitingPayment.value = false;
+    }, 4000);
   } finally {
     isSubmitting.value = false;
   }
 };
 
-// Auto-set gateway/mode when method changes
 watch(
   () => orderPayload.value.payment.method,
   (method) => {

@@ -26,22 +26,22 @@
       />
       <SidebarLink
         icon="fa-solid fa-tag"
-        name="Coupon Manager"
+        name="Manage Coupons"
         :to="{ name: 'AdminCouponManager' }"
       />
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
-        name="Update Order Status"
-        :to="{ name: 'StaffOrderStatusUpdate' }"
+        name="Manage Orders"
+        :to="{ name: 'ManageOrders' }"
       />
       <SidebarLink
         icon="fa-solid fa-star"
-        name="All Reviews"
+        name="Manage Reviews"
         :to="{ name: 'StaffReviewsManager' }"
       />
       <SidebarLink
         icon="fa-solid fa-exclamation-triangle"
-        name="All Issues"
+        name="Manage Issues"
         :to="{ name: 'StaffIssues' }"
       />
 
@@ -95,26 +95,26 @@
       />
       <SidebarLink
         icon="fa-solid fa-tag"
-        name="Coupon Manager"
+        name="Manage Coupons"
         :to="{ name: 'AdminCouponManager' }"
         @click="$emit('closeSidebar')"
       />
    
       <SidebarLink
         icon="fa-solid fa-truck-ramp-box"
-        name="Update Order Status"
-        :to="{ name: 'StaffOrderStatusUpdate' }"
+        name="Manage Orders"
+        :to="{ name: 'ManageOrders' }"
         @click="$emit('closeSidebar')"
       />
       <SidebarLink
         icon="fa-solid fa-star"
-        name="AdminReviewsManager"
+        name="Manage Reviews"
         :to="{ name: 'StaffReviewsManager' }"
         @click="$emit('closeSidebar')"
       />
        <SidebarLink
         icon="fa-solid fa-exclamation-triangle"
-        name="All Issues"
+        name="Manage Issues"
         :to="{ name: 'StaffIssues' }"
         @click="$emit('closeSidebar')"
       />

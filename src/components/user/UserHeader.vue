@@ -1,13 +1,13 @@
 <template>
   <header class="bg-bone-white fixed top-0 w-full z-30 transform translate-x-0">
-    <div class="flex justify-between items-center px-4 py-3">
-      <router-link to="/" class="flex items-center">
+    <div class="flex justify-end items-center px-4 py-3">
+      <!-- <router-link to="/" class="flex items-center">
         <img
           src="@/assets/images/logo/chuvi-logo.png"
           alt="Company Logo"
           class="h-8 transition-all duration-500"
         />
-      </router-link>
+      </router-link> -->
 
       <div class="flex items-center space-x-4">
         <!-- 🛎️ Notification Bell -->
@@ -26,13 +26,13 @@
         </router-link>
 
         <!-- Logout -->
-        <button
+        <!-- <button
           @click="handleLogout"
           class="flex items-center space-x-2 text-charcoal hover:text-golden-brown transition-colors duration-200 cursor-pointer"
         >
           <font-awesome-icon icon="sign-out-alt" class="w-5 h-5" />
           <span class="hidden sm:inline text-base font-bold">Logout</span>
-        </button>
+        </button> -->
 
         <!-- Sidebar Toggle -->
         <button
@@ -73,9 +73,9 @@ onMounted(() => {
 });
 
 // Logout logic
-function handleLogout() {
-  localStorage.removeItem("userToken");
-  showSuccess("You have been logged out successfully.");
-  router.push({ name: "Home" });
-}
+// function handleLogout() {
+//   localStorage.removeItem("userToken");
+//   showSuccess("You have been logged out successfully.");
+//   router.push({ name: "Home" });
+// }
 </script>

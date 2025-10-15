@@ -86,7 +86,12 @@ import {
   faSlidersH,
   faEyeSlash,
   faEye,
-  faCopy
+  faCopy,
+  faRightFromBracket,
+  faAngleLeft,
+  faAngleRight,
+  faCalendarCheck
+
 
 
 
@@ -186,7 +191,11 @@ library.add(
   faSlidersH,
   faEyeSlash,
   faEye,
-  faCopy
+  faCopy,
+  faRightFromBracket,
+  faAngleLeft,
+  faAngleRight,
+  faCalendarCheck
 );
 
 // Register GSAP plugins

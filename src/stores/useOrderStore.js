@@ -1,12 +1,11 @@
-// /stores/orderStore.js
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-export const useOrderStore = defineStore('order', () => {
+export const useOrderStore = defineStore("order", () => {
   const orderNumber = ref(null);
-  const orderData = ref({}); 
+  const orderData = ref({});
 
-  function setOrder(number, data) {
+  function setOrder(number, data = {}) {
     orderNumber.value = number;
     orderData.value = data;
   }

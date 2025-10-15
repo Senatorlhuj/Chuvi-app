@@ -140,7 +140,34 @@ export async function deleteAddress(addressId) {
         method: 'DELETE',
     });
 }
+export async function updateProfilePhoto(photoFormData) { // Accepts FormData object for the file
+    const endpoint = 'api/users/photo';
+    const token = getAuthToken(endpoint);
+    const url = `${API_BASE_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
 
+    console.log('➡️ Sending photo update to:', url);
+
+
+    const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: photoFormData,
+    });
+
+
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
+        throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        return response.json();
+    }
+    return null;
+}
 export async function updatePreferences(preferencesData) {
     return authorizedFetch(`${USER_BASE_PATH}/preferences`, {
         method: 'PATCH',
@@ -255,6 +282,13 @@ export async function createOrder(orderFormData) { // Accepts FormData object
     }
     return null;
 }
+export async function previewOrder(previewData) {
+    return authorizedFetch('api/orders/preview', {
+        method: 'POST',
+        body: JSON.stringify(previewData),
+    });
+}
+
 export async function getUserOrders(phone) {
     try {
         // --- Normalize to +234 format ---
@@ -293,11 +327,34 @@ export async function getOrderById(orderId) {
     });
 }
 
-export async function cancelUserOrder(orderId, noteData = {}) {
-    return authorizedFetch(`api/orders/${orderId}/cancel`, {
+export const cancelUserOrder = async (orderId, data) => {
+    return authorizedFetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
         method: 'POST',
-        body: JSON.stringify(noteData)
+        body: JSON.stringify(data), 
     });
+};
+
+export async function getOrderDetails(orderId) {
+    if (!orderId) throw new Error("Order ID is required");
+    return authorizedFetch(`api/orders/${orderId}`, { method: 'GET' });
+}
+export async function getOrderReceipt(orderId) {
+    if (!orderId) throw new Error("Order ID is required");
+
+    const response = await authorizedFetch(`api/orders/${orderId}/receipt`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/pdf',
+        },
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to fetch receipt: ${text || response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    return blob;
 }
 
 export async function trackOrderPublic(orderId) {
@@ -311,6 +368,13 @@ export async function createReview(reviewData) {
         body: JSON.stringify(reviewData),
     });
 }
+export async function createIssue(issueData) {
+    return authorizedFetch('api/issues', {
+        method: 'POST',
+        body: JSON.stringify(issueData),
+    });
+}
+
 export async function getAllServicesCatalog() {
     const data = await authorizedFetch('api/services', { method: 'GET' });
     return data;

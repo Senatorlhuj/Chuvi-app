@@ -21,11 +21,10 @@
       v-if="orderNumber"
       class="bg-gray-200 text-charcoal p-4 rounded-lg font-mono mb-8"
     >
-      Order Number:
-      <span class="font-bold">{{ orderNumber }}</span>
+      Order Number: <span class="font-bold">{{ orderNumber }}</span>
     </div>
 
-   <router-link :to="{ name: 'OrderStatus', params: { id: orderNumber } }">
+    <router-link :to="{ name: 'OrderStatus', params: { id: orderNumber } }">
       <button
         class="bg-golden-brown text-bone-white py-4 px-10 rounded-md font-semibold text-lg hover:bg-pure-gold transition-colors cursor-pointer"
       >
@@ -36,9 +35,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useOrderStore } from '@/stores/useOrderStore';
+import { computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useOrderStore } from "@/stores/useOrderStore";
 
 const route = useRoute();
 const router = useRouter();
@@ -48,13 +47,12 @@ const orderNumber = computed(() => orderStore.orderNumber);
 const orderDetails = computed(() => orderStore.orderData);
 
 onMounted(() => {
-  if (!orderStore.orderNumber && route.query.orderNumber) {
-    orderStore.setOrder(route.query.orderNumber, {}); // optional data
+  const idFromRoute = route.params.orderId;
+  if (idFromRoute) {
+    orderStore.setOrder(idFromRoute, {});
+  } else if (!orderStore.orderNumber) {
+    console.warn("⚠️ No order ID found, redirecting...");
+    router.push({ name: "BookPickup" });
   }
-
-  // if (!orderStore.orderNumber && !route.query.orderNumber) {
-  //   console.error('No order number found. Redirecting to form.');
-  //   router.push({ name: 'BookPickup' }); 
-  // }
 });
 </script>

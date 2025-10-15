@@ -24,14 +24,15 @@
         @keydown.up.prevent="navigateOptions(-1)"
         :disabled="disabled"
         :class="[
-          'appearance-none block p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left font-medium transition-all duration-30 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
+          'appearance-none block p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left font-medium transition-all duration-300 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+          isOpen ? 'border-golden-brown text-navy-blue' : 'text-charcoal',
           widthClass,
         ]"
       >
         <span v-if="selectedOption" class="block truncate">
           {{ selectedOption.label }}
         </span>
-        <span v-else class="block truncate ">
+        <span v-else class="block truncate">
           {{ placeholder }}
         </span>
       </button>
@@ -108,10 +109,7 @@
     </div>
 
     <!-- Helper Text -->
-    <p
-      v-if="helperText"
-      class="text-xs  mt-1 transition-opacity duration-200"
-    >
+    <p v-if="helperText" class="text-xs mt-1 transition-opacity duration-200">
       {{ helperText }}
     </p>
   </div>
@@ -156,7 +154,7 @@ const props = defineProps({
     type: String,
     default: null,
   },
- 
+
   widthClass: {
     type: String,
     default: "w-48",
