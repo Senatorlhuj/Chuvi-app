@@ -128,7 +128,7 @@ const handleVerify = async () => {
   try {
     await verifyPhone({ phone: phone.value, code });
     showSuccess("Phone verified successfully!");
-    router.push({ name: "BookPickup" });
+    router.push({ name: "Login" });
   } catch (err) {
     console.error("Verification error:", err);
     showError(err.message || "Verification failed. Please try again.");

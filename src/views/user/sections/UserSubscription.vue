@@ -33,6 +33,11 @@ import {
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
+// --- Hooks Instantiation FIX ---
+const route = useRoute();
+const router = useRouter();
+// ------------------------------
+
 const { showSuccess, showError } = useToast();
 const PlansPage = defineAsyncComponent(() =>
   import("@/views/user/sections/PlansPage.vue")
@@ -71,11 +76,7 @@ const isSubscriptionPaused = computed(
 );
 // Disable the cancel button if auto-renewal is already canceled
 const isAutoRenewCancelled = computed(() => {
-  return (
-    subscription.value &&
-    (subscription.value.autoRenew === false ||
-      subscription.value.auto_renew === false)
-  );
+  return subscription.value?.autoRenew === false;
 });
 
 const currentPlanCode = computed(() => subscription.value?.plan?.code);
@@ -232,11 +233,15 @@ const openResumeConfirm = () => {
   );
 };
 
-const handlePlanChange = () => {
-  newPlanCode.value = null;
+const handlePlanChange = async () => {
   showPlanChangeModal.value = true;
-  loadAvailablePlans();
+  // No need to reload from API — just ensure isCurrent flag is set correctly
+  availablePlans.value = availablePlans.value.map((p) => ({
+    ...p,
+    isCurrent: p.code === subscription.value?.plan?.code,
+  }));
 };
+
 
 const closePlanChangeModal = () => {
   showPlanChangeModal.value = false;
@@ -268,6 +273,7 @@ const submitPlanChange = async () => {
           response.payment?.authorization_url ||
           response.payment?.checkoutUrl
         ) {
+          // Redirect for immediate payment if required
           window.location.href =
             response.payment.authorization_url || response.payment.checkoutUrl;
           return;
@@ -295,7 +301,8 @@ const handleCancelAutoRenew = async () => {
     await cancelAutoPayment(subscription.value.subId, {
       reason: "User cancelled auto-renewal",
     });
-    await loadCurrentSubscription();
+    // Reload subscription without showing the full loader to avoid a flash
+    await loadCurrentSubscription(false);
     showSuccess("Auto-renewal cancelled successfully!");
   } catch (err) {
     showError(err.message || "Failed to cancel auto-renewal.");
@@ -319,10 +326,9 @@ const openCancelConfirm = () => {
 let refreshInterval = null;
 
 onMounted(async () => {
-  // Initial load
   await loadCurrentSubscription();
+  await loadAvailablePlans(); // ⬅ Prefetch all plans for modal
 
-  // 🔹 1. Detect post-payment redirect
   const justSubscribed =
     route.query.status === "success" ||
     route.query.reference ||
@@ -332,16 +338,15 @@ onMounted(async () => {
     showSuccess("Payment confirmed! Refreshing your subscription...");
     await loadCurrentSubscription();
     localStorage.removeItem("subscribing");
-
-    // Clean up URL query params like ?status=success
     router.replace({ query: {} });
   }
 
-  // 🔹 2. Gentle auto-refresh every 60 seconds
+  // Auto-refresh every 60s
   refreshInterval = setInterval(() => {
     loadCurrentSubscription(false);
   }, 60000);
 });
+
 
 onUnmounted(() => {
   if (refreshInterval) clearInterval(refreshInterval);
@@ -368,7 +373,6 @@ onUnmounted(() => {
         v-if="isLoading"
         class="flex flex-col items-center justify-center py-20"
       >
-        <!-- Loading State -->
         <GradientLoader v-if="isLoading">
           Loading your subscription...
         </GradientLoader>
@@ -376,7 +380,7 @@ onUnmounted(() => {
 
       <!-- No Active Subscription -->
       <div v-else-if="error" class="space-y-8">
-        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-xl">
           <div class="flex items-start">
             <div class="flex-shrink-0">
               <font-awesome-icon
@@ -443,7 +447,7 @@ onUnmounted(() => {
                   :icon="faCircle"
                   class="w-3 h-3"
                   :class="{
-                    'text-[#27B8A7]': isSubscriptionActive,
+                    'text-brand-green': isSubscriptionActive,
                     'text-golden-brown': isSubscriptionPaused,
                   }"
                 />
@@ -470,7 +474,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-if="daysUntilRenewal"
-                    class="text-xs font-semibold text-[#27B8A7] bg-[#27B8A7]/10 px-2 py-1 rounded-full"
+                    class="text-xs font-semibold text-brand-green bg-brand-green/10 px-2 py-1 rounded-full"
                   >
                     {{ daysUntilRenewal }} days
                   </span>
@@ -536,7 +540,7 @@ onUnmounted(() => {
                   Monthly Cost
                 </p>
                 <p class="text-lg font-bold text-navy-blue">
-                  {{ formatPrice(subscription.plan?.priceNgn || 0) }}
+                  {{ formatPrice(subscription.plan?.price || 0) }}
                 </p>
               </div>
             </div>
@@ -557,7 +561,7 @@ onUnmounted(() => {
                 :class="
                   isSubscriptionActive
                     ? 'bg-golden-brown/10 text-golden-brown hover:bg-golden-brown hover:text-navy-blue border border-golden-brown hover:border-golden-brown'
-                    : 'bg-[#27B8A7]/10 text-[#27B8A7] hover:bg-[#27B8A7] hover:text-white border border-[#27B8A7] hover:border-[#27B8A7]'
+                    : 'bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white border border-brand-green hover:border-brand-green'
                 "
               >
                 <font-awesome-icon
@@ -667,148 +671,73 @@ onUnmounted(() => {
 
       <!-- Modal Body -->
       <div class="p-6 md:p-8">
-        <!-- Current Plan -->
+        <h3 class="text-xl font-bold text-navy-blue mb-6">Your Current Plan</h3>
+
         <div
-          class="bg-cream border-l-4 border-golden-brown rounded-lg p-4 md:p-6 mb-8"
+          v-if="subscription?.plan"
+          class="bg-cream border-l-4 border-golden-brown rounded-xl p-4 md:p-6 mb-8"
         >
-          <p class="text-xs font-semibold text-charcoal mb-2">
-            Your Current Plan
-          </p>
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center justify-between">
             <div>
-              <p class="text-xl md:text-2xl font-bold text-navy-blue">
-                {{ subscription.plan?.name }}
+              <p class="text-2xl font-bold text-navy-blue">
+                {{ subscription.plan.name }}
               </p>
               <p class="text-charcoal text-sm mt-1">
-                {{ subscription.plan?.monthly_items }} items/month • ₦{{
-                  subscription.plan?.priceNgn?.toLocaleString()
-                }}/mo
+                {{ subscription.plan.monthly_items }} items/month •
+                {{ formatPrice(subscription.plan.price) }}
               </p>
             </div>
             <font-awesome-icon
               :icon="faCheckCircle"
-              class="w-6 h-6 text-[#27B8A7] flex-shrink-0"
+              class="w-6 h-6 text-brand-green flex-shrink-0"
             />
           </div>
         </div>
 
-        <!-- Available Plans -->
-        <div>
-          <h4 class="text-lg font-bold text-navy-blue mb-4">Available Plans</h4>
+        <h4 class="text-lg font-bold text-navy-blue mb-4">Available Plans</h4>
 
-          <div
-            v-if="isPlanLoading"
-            class="flex flex-col items-center justify-center py-12"
-          >
-            <div class="relative w-10 h-10 mb-4">
-              <div
-                class="absolute inset-0 border-4 border-t-4 border-navy-blue/20 rounded-full animate-spin"
-                style="border-top-color: var(--color-golden-brown)"
-              ></div>
-            </div>
-            <p class="text-charcoal">Loading available plans...</p>
+        <div
+          v-if="isPlanLoading"
+          class="flex flex-col items-center justify-center py-12"
+        >
+          <div class="relative w-10 h-10 mb-4">
+            <div
+              class="absolute inset-0 border-4 border-t-4 border-navy-blue/20 rounded-full animate-spin"
+              style="border-top-color: var(--color-golden-brown)"
+            ></div>
           </div>
+          <p class="text-charcoal">Loading available plans...</p>
+        </div>
 
+        <div v-else>
           <div
-            v-else-if="availablePlans.length === 0"
-            class="text-center py-12"
+            v-for="plan in availablePlans"
+            :key="plan.code"
+            class="w-full p-4 md:p-6 rounded-xl border-2 mb-3"
+            :class="
+              plan.isCurrent
+                ? 'border-golden-brown bg-cream'
+                : 'border-gray-200 bg-white hover:border-golden-brown transition-all'
+            "
           >
-            <p class="text-charcoal">
-              No other plans available for change at this time.
-            </p>
-          </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-lg font-bold text-navy-blue">{{ plan.name }}</p>
+                <p class="text-sm text-charcoal">
+                  {{ plan.monthly_items }} items/month •
+                  {{ formatPrice(plan.price_ngn) }}
+                </p>
 
-          <div v-else class="space-y-3">
-            <button
-              v-for="plan in availablePlans"
-              :key="plan.code"
-              @click="newPlanCode = plan.code"
-              class="w-full p-4 md:p-6 rounded-xl border-2 transition-all text-left hover:shadow-md"
-              :class="{
-                'border-golden-brown bg-cream shadow-lg':
-                  newPlanCode === plan.code,
-                'border-gray-200 bg-bone-white hover:border-golden-brown':
-                  newPlanCode !== plan.code,
-              }"
-            >
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <p class="text-lg md:text-xl font-bold text-navy-blue">
-                      {{ plan.name }}
-                    </p>
-                    <span
-                      class="text-xs font-semibold text-golden-brown bg-golden-brown/10 px-2 py-1 rounded-full"
-                    >
-                      {{ plan.tier }}
-                    </span>
-                  </div>
-                  <p class="text-sm text-charcoal mb-3">
-                    <span class="inline-flex items-center gap-1 mr-4">
-                      <font-awesome-icon
-                        :icon="faBoxOpen"
-                        class="w-3 h-3 text-golden-brown"
-                      />
-                      {{ plan.monthly_items }} items
-                    </span>
-                    <span class="inline-flex items-center gap-1">
-                      <font-awesome-icon
-                        :icon="faSync"
-                        class="w-3 h-3 text-golden-brown"
-                      />
-                      {{ plan.rollover_limit_items }} rollover
-                    </span>
-                  </p>
-                  <p class="text-xs text-charcoal">
-                    <strong>Difference:</strong>
-                    {{
-                      plan.monthly_items - subscription.plan?.monthly_items > 0
-                        ? "+"
-                        : ""
-                    }}
-                    {{ plan.monthly_items - subscription.plan?.monthly_items }}
-                    items
-                  </p>
-                </div>
-                <div class="text-right flex-shrink-0">
-                  <p class="text-2xl md:text-3xl font-extrabold text-navy-blue">
-                    ₦{{ plan.priceNgn?.toLocaleString() }}
-                  </p>
-                  <p class="text-xs text-charcoal mt-1">/month</p>
-                  <div v-if="newPlanCode === plan.code" class="mt-3">
-                    <font-awesome-icon
-                      :icon="faCheckCircle"
-                      class="w-5 h-5 text-[#27B8A7]"
-                    />
-                  </div>
-                </div>
+                
               </div>
-            </button>
+              <div v-if="plan.isCurrent">
+                <font-awesome-icon
+                  :icon="faCheckCircle"
+                  class="w-5 h-5 text-brand-green"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="mt-8 pt-6 border-t border-gray-200 flex gap-3">
-          <button
-            @click="closePlanChangeModal"
-            class="flex-1 py-3 px-4 rounded-xl font-bold transition-colors border border-gray-300 text-charcoal hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            @click="submitPlanChange"
-            :disabled="!newPlanCode || actionStates.planChange"
-            class="flex-1 py-3 px-4 rounded-xl font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed bg-navy-blue text-white hover:bg-charcoal flex items-center justify-center gap-2"
-          >
-            <font-awesome-icon
-              :icon="actionStates.planChange ? faSpinner : faArrowRight"
-              :class="{ 'animate-spin': actionStates.planChange }"
-              class="w-4 h-4"
-            />
-            <span>{{
-              actionStates.planChange ? "Processing..." : "Confirm Change"
-            }}</span>
-          </button>
         </div>
       </div>
     </div>
@@ -847,7 +776,8 @@ onUnmounted(() => {
           <button
             @click="confirmActionHandler"
             :class="confirmButtonClass"
-            class="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+            :disabled="actionStates[confirmActionType]"
+            class="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <font-awesome-icon
               :icon="
@@ -865,11 +795,18 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Custom color variable mapping for the dynamic classes */
 .text-brand-green {
   color: #27b8a7;
 }
 .bg-brand-green {
   background-color: #27b8a7;
+}
+.bg-brand-green\/10 {
+  background-color: rgba(39, 184, 167, 0.1);
+}
+.border-brand-green {
+  border-color: #27b8a7;
 }
 
 .text-red-600 {
@@ -878,6 +815,40 @@ onUnmounted(() => {
 .border-red-600 {
   border-color: #dc2626;
 }
+.hover\:bg-brand-green\/80:hover {
+  background-color: rgba(39, 184, 167, 0.8);
+}
+
+/* Ensure custom colors are accessible via Tailwind classes where not defined as variables */
+.text-navy-blue {
+  color: var(--color-navy-blue, #00022e);
+}
+.bg-navy-blue {
+  background-color: var(--color-navy-blue, #00022e);
+}
+
+.text-golden-brown {
+  color: var(--color-golden-brown, #996515);
+}
+.bg-golden-brown {
+  background-color: var(--color-golden-brown, #996515);
+}
+
+.text-charcoal {
+  color: var(--color-charcoal, #302e2d);
+}
+.bg-charcoal {
+  background-color: var(--color-charcoal, #302e2d);
+}
+
+.bg-cream {
+  background-color: var(--color-cream, #fdfbd4);
+}
+.bg-bone-white {
+  background-color: var(--color-bone-white, #f6f4f1);
+}
+
+/* Standard Tailwind overrides */
 button:disabled {
   pointer-events: none;
   filter: grayscale(0.5);

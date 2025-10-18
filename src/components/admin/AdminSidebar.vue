@@ -14,7 +14,7 @@
             v-show="!isCollapsed"
             src="@/assets/images/logo/chuvi-logo.png"
             alt="Admin Logo"
-            class="h-10 w-auto"
+            class="h-10 w-auto filter brightness-0 invert"
           />
         </transition>
         <button

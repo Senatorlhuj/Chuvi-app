@@ -2,15 +2,18 @@
   <section class="bg-bone-white min-h-screen py-12 px-4 md:px-8 lg:px-16">
     <div class="max-w-7xl mx-auto">
       <h2 class="text-3xl md:text-4xl font-extrabold text-charcoal mb-12 text-center">
-       Our Pricing
+        Our Pricing
       </h2>
 
       <!-- Skeleton Loading -->
-      <div v-if="isLoading" class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-if="isLoading"
+        class="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+      >
         <div
           v-for="n in 6"
           :key="n"
-          class="animate-pulse bg-white rounded-2xl p-6  space-y-4"
+          class="animate-pulse bg-white rounded-2xl p-6 space-y-4"
         >
           <div class="h-40 bg-gray-200 rounded-xl"></div>
           <div class="h-6 bg-gray-300 rounded w-3/4"></div>
@@ -48,47 +51,54 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import PricingCard from '@/components/atoms/PricingCard.vue';
-import PricingItem from '@/components/atoms/PricingItem.vue';
-import { getAllServicesCatalog } from '@/services/api';
+import { ref, onMounted } from "vue";
+import PricingCard from "@/components/atoms/PricingCard.vue";
+import PricingItem from "@/components/atoms/PricingItem.vue";
+import { getAllServicesCatalog } from "@/services/api";
+
+// ✅ Manually import images
+import laundryTop from "@/assets/images/laundryImages/laundry-top.jpeg";
+import laundryBottom from "@/assets/images/laundryImages/laundry-bottom.jpg";
+import laundryFullbody from "@/assets/images/laundryImages/laundry-fullbody.jpg";
+import laundryHouseHold from "@/assets/images/laundryImages/laundry-house-hold.jpeg";
+import laundryAccessories from "@/assets/images/laundryImages/laundry-accessories.jpeg";
+import laundryGeneric from "@/assets/images/laundryImages/hand-sorting.jpg";
 
 const services = ref([]);
 const isLoading = ref(true);
 
-// Fetch backend data
 onMounted(async () => {
   try {
     const data = await getAllServicesCatalog();
     services.value = data;
   } catch (err) {
-    console.error('Error fetching services catalog:', err);
+    console.error("Error fetching services catalog:", err);
   } finally {
     isLoading.value = false;
   }
 });
 
-// Format price helper
-const formatPrice = (price) => `₦${price.toLocaleString()}`;
-
-// Map service codes to images
-const images = import.meta.glob('/src/assets/images/laundryImages/*.{jpg,jpeg,png,svg}', { eager: true });
-const getImageForService = (code) => {
-  const mapping = {
-    SHIRT: 'laundry-top.jpeg',
-    TROUSER: 'laundry-bottom.jpg',
-    SIMPLE_DRESS: 'laundry-fullbody.jpg',
-    NATIVE: 'laundry-fullbody.jpg',
-    JEANS: 'laundry-bottom.jpg',
-    BEDSHEET: 'laundry-house-hold.jpeg',
-    PILLOWCASE: 'laundry-accessories.jpeg',
-    DUVET: 'laundry-house-hold.jpeg',
-    AGBADA: 'laundry-fullbody.jpg'
-  };
-  const fileName = mapping[code] || 'laundry-generic.jpg';
-  const imagePath = `/src/assets/images/laundryImages/${fileName}`;
-  return images[imagePath]?.default || '';
+// ✅ Format price
+const formatPrice = (price) => {
+  if (!price || isNaN(price)) return "₦0";
+  return `₦${price.toLocaleString()}`;
 };
+
+// ✅ Map service codes to manually imported images
+const imageMapping = {
+  SHIRT: laundryTop,
+  TROUSER: laundryBottom,
+  SIMPLE_DRESS: laundryFullbody,
+  NATIVE: laundryFullbody,
+  JEANS: laundryBottom,
+  BEDSHEET: laundryHouseHold,
+  PILLOWCASE: laundryAccessories,
+  DUVET: laundryHouseHold,
+  AGBADA: laundryFullbody,
+  DEFAULT: laundryGeneric,
+};
+
+const getImageForService = (code) => imageMapping[code] || imageMapping.DEFAULT;
 </script>
 
 <style scoped>
@@ -96,7 +106,7 @@ const getImageForService = (code) => {
   background-color: var(--color-bone-white);
 }
 
-/* Subtle fade-up animation for cards */
+/* Fade-in animation for cards */
 @keyframes fadeIn {
   0% {
     opacity: 0;

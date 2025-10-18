@@ -419,23 +419,20 @@ export async function markAllAdminNotificationsAsRead() {
         method: 'PATCH'
     });
 }
-
-// ⚠️ Note: Your Admin Notifications page is likely calling the *user* functions below
-// which is why it's Unauthorized. Let's fix their paths too.
 export async function getNotifications() {
     // ✅ CORRECTION: Removed 'api/'
-    return authorizedFetch('api/api/notifications', { method: 'GET' });
+    return authorizedFetch('api/notifications', { method: 'GET' });
 }
 
 export async function markNotificationAsRead(notificationId) {
     if (!notificationId) throw new Error('Notification ID is required');
     // ✅ CORRECTION: Removed 'api/'
-    return authorizedFetch(`notifications/${notificationId}/read`, { method: 'PATCH' });
+    return authorizedFetch(`api/notifications/${notificationId}/read`, { method: 'PATCH' });
 }
 
 export async function markAllNotificationsAsRead() {
     // ✅ CORRECTION: Removed 'api/'
-    return authorizedFetch('notifications/read-all', { method: 'PATCH' });
+    return authorizedFetch('api/notifications/read-all', { method: 'PATCH' });
 }
 
 // ==================== Newsletter Subscription ====================
