@@ -175,11 +175,12 @@ export function useOrderItems() {
     const isItemSelected = (code) =>
         orderPayload.value.items.some((i) => i.serviceCode === code);
 
-    const getItemQuantity = (code) => {
-        // NOTE: This only returns the quantity of the *first* matching service code found.
-        const item = orderPayload.value.items.find((i) => i.serviceCode === code);
-        return item ? item.quantity : 0;
-    };
+  const getItemQuantity = (code) => {
+   
+    return orderPayload.value.items
+        .filter((i) => i.serviceCode === code)
+        .reduce((sum, item) => sum + item.quantity, 0);
+};
 
 
     return {

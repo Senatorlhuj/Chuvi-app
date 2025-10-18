@@ -32,34 +32,30 @@ function getAuthToken(endpoint) {
 }
 async function authorizedFetch(endpoint, options = {}) {
     const url = `${API_BASE_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
-
-    console.log('➡️ Sending order to:', url);
     const token = getAuthToken(endpoint);
 
-    const defaultHeaders = {
+    const headers = {
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '',
+        ...(options.headers || {}),
     };
 
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
-    });
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(url, { ...options, headers });
 
     if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
-        throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
+        const text = await response.text();
+        console.error('❌ API error:', response.status, text);
+        throw new Error(`HTTP ${response.status}: ${text}`);
     }
 
     const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-        return response.json();
-    }
-    return null;
+    return contentType && contentType.includes("application/json")
+        ? response.json()
+        : null;
 }
+
+
 export async function register(userData) {
     return authorizedFetch('api/auth/register', {
         method: 'POST',
@@ -319,7 +315,41 @@ export async function getUserOrders(phone) {
     }
 }
 
+// --- FIX: Reworked getOrderReceipt to bypass authorizedFetch's non-JSON null return ---
+export async function getOrderReceipt(orderId) {
+    if (!orderId) throw new Error("Order ID is required");
 
+    const endpoint = `api/orders/${orderId}/receipt`;
+    const token = getAuthToken(endpoint);
+    const url = `${API_BASE_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+
+            'Authorization': token ? `Bearer ${token}` : '',
+
+            'Accept': 'application/pdf',
+        },
+    });
+
+
+    if (!response.ok) {
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
+            throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
+        }
+
+
+        throw new Error(`Failed to fetch receipt. HTTP Status: ${response.status}`);
+    }
+
+
+    const blob = await response.blob();
+    return blob;
+}
 
 export async function getOrderById(orderId) {
     return authorizedFetch(`api/orders/${orderId}`, {
@@ -327,34 +357,18 @@ export async function getOrderById(orderId) {
     });
 }
 
+// In api.js
 export const cancelUserOrder = async (orderId, data) => {
-    return authorizedFetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+    // ⚡ FIX: Remove API_BASE_URL from the endpoint string
+    return authorizedFetch(`api/orders/${orderId}/cancel`, {
         method: 'POST',
-        body: JSON.stringify(data), 
+        body: JSON.stringify(data),
     });
 };
 
 export async function getOrderDetails(orderId) {
     if (!orderId) throw new Error("Order ID is required");
     return authorizedFetch(`api/orders/${orderId}`, { method: 'GET' });
-}
-export async function getOrderReceipt(orderId) {
-    if (!orderId) throw new Error("Order ID is required");
-
-    const response = await authorizedFetch(`api/orders/${orderId}/receipt`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/pdf',
-        },
-    });
-
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Failed to fetch receipt: ${text || response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    return blob;
 }
 
 export async function trackOrderPublic(orderId) {
@@ -383,16 +397,16 @@ export async function getAllServicesCatalog() {
 // ==================== Notifications ====================
 
 export async function getNotifications() {
-    return authorizedFetch('api/notifications', { method: 'GET' });
+    return authorizedFetch('api/api/notifications', { method: 'GET' });
 }
 
 export async function markNotificationAsRead(notificationId) {
     if (!notificationId) throw new Error('Notification ID is required');
-    return authorizedFetch(`api/notifications/${notificationId}/read`, { method: 'PATCH' });
+    return authorizedFetch(`api/api/notifications/${notificationId}/read`, { method: 'PATCH' });
 }
 
 export async function markAllNotificationsAsRead() {
-    return authorizedFetch('api/notifications/read-all', { method: 'PATCH' });
+    return authorizedFetch('api/api/notifications/read-all', { method: 'PATCH' });
 }
 
 // ==================== Newsletter Subscription ====================
@@ -453,15 +467,20 @@ export async function deleteEmployee(id) {
 
 
 export async function createCoupon(couponData) {
+    // 🛑 FIX MAPPING HERE: Correctly map frontend keys to backend expected keys
     const mappedData = {
-        code: couponData.couponCode,
+        code: couponData.code, // Mapped from frontend's dataToSend.code
         discountPercent: couponData.discountPercent,
         discountAmount: couponData.discountAmount,
-        expiresAt: couponData.expiryDate,
+        expiresAt: couponData.expiresAt, // Mapped from frontend's dataToSend.expiresAt
         minOrderValue: couponData.minOrderValue,
-        maxUses: couponData.maxUsage,
+        maxUses: couponData.maxUses, // Mapped from frontend's dataToSend.maxUses
+        isActive: couponData.isActive, // Ensure this is passed if available
     };
-    return authorizedFetch('api/admin/create/coupons', { method: 'POST', body: JSON.stringify(mappedData) });
+    // Note: The frontend is already doing the heavy lifting of preparing the correct keys!
+    // If you fix the Vue component's `handleFormSubmit` (see point 2 below), 
+    // you can simplify this to: 
+    return authorizedFetch('api/admin/create/coupons', { method: 'POST', body: JSON.stringify(couponData) });
 }
 
 export async function getAllCoupons() {
@@ -469,13 +488,15 @@ export async function getAllCoupons() {
 }
 
 export async function updateCoupon(couponId, couponData) {
+    // 🛑 FIX MAPPING HERE: Similarly for update
     const mappedData = {
-        code: couponData.couponCode,
+        code: couponData.code, // Mapped from frontend's dataToSend.code
         discountPercent: couponData.discountPercent,
         discountAmount: couponData.discountAmount,
-        expiresAt: couponData.expiryDate,
+        expiresAt: couponData.expiresAt, // Mapped from frontend's dataToSend.expiresAt
         minOrderValue: couponData.minOrderValue,
-        maxUses: couponData.maxUsage,
+        maxUses: couponData.maxUses, // Mapped from frontend's dataToSend.maxUses
+        isActive: couponData.isActive,
     };
     return authorizedFetch(`api/admin/coupons/${couponId}`, { method: 'PUT', body: JSON.stringify(mappedData) });
 }
@@ -535,49 +556,100 @@ export async function deleteService(serviceId) {
     return authorizedFetch(`api/admin/services/${serviceId}`, { method: 'DELETE' });
 }
 
-export async function getServicePricings() {
+export async function getAdminServicePricings() {
     return authorizedFetch('api/admin/get-service-pricings');
 }
 
-export async function getServicePricingById(pricingId) {
-    return authorizedFetch(`api/admin/service-pricings/${pricingId}`);
+export async function updateAdminServicePricing(id, pricingData) {
+    return authorizedFetch(`api/admin/service-pricings/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(pricingData)
+    });
 }
 
-export async function updateServicePricing(pricingId, pricingData) {
-    return authorizedFetch(`api/admin/service-pricings/${pricingId}`, { method: 'PUT', body: JSON.stringify(pricingData) });
+export async function deleteAdminServicePricing(id) {
+    return authorizedFetch(`api/admin/service-pricings/${id}`, {
+        method: 'DELETE'
+    });
 }
 
-export async function deleteServicePricing(pricingId) {
-    return authorizedFetch(`api/admin/service-pricings/${pricingId}`, { method: 'DELETE' });
+export async function createAdminPlan(planData) {
+    return authorizedFetch('api/admin/plans', {
+        method: 'POST',
+        body: JSON.stringify(planData)
+    });
+}
+export async function getActiveAdminPlans() {
+    return authorizedFetch('api/admin/plans/active', {
+        method: 'GET',
+    });
+}
+export async function getSingleAdminPlan(id) {
+    return authorizedFetch(`api/admin/plan/${id}`, { method: 'GET' });
 }
 
+export async function AdminFetchPlans() {
+    return authorizedFetch('api/admin/plan', {
+        method: 'GET',
+    });
+}
+
+export async function updateAdminPlan(code, planData) {
+    return authorizedFetch(`api/admin/plans/${code}`, {
+        method: 'PUT',
+        body: JSON.stringify(planData)
+    });
+}
+
+export async function deleteAdminPlan(code) {
+    return authorizedFetch(`api/admin/plans/${code}`, {
+        method: 'DELETE'
+    });
+}
+
+export async function activateAdminPlan(code) {
+    return authorizedFetch(`api/admin/plans/${code}/activate`, {
+        method: 'PATCH'
+    });
+}
+export async function deActivateAdminPlan(code) {
+    return authorizedFetch(`api/admin/plans/${code}/deactivate`, {
+        method: 'PATCH'
+    });
+}
 export async function getReviewSummary() {
     return authorizedFetch('api/admin/reviews/summary', { method: 'GET' });
 }
 
 export async function getAdminAllReviews() {
-    return authorizedFetch('api/admin/reviews/', { method: 'GET' });
+    return authorizedFetch('api/admin/reviews', { method: 'GET' });
 }
+
+// src/services/api.js
 
 export const getIssues = async () => {
-
     const data = await authorizedFetch('api/admin/issues', { method: 'GET' });
-    return data.issues;
+    console.log('✅ Issues response:', data);
+    return data.issues || [];
 };
 
-export const updateIssue = async (id, payload) => {
 
-    const data = await authorizedFetch(`api/admin/issues/${id}`, {
+export const updateIssue = async (orderId, payload) => {
+    const response = await authorizedFetch(`api/admin/issues/${orderId}`, {
         method: 'PATCH',
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
     });
-    return data.issue;
+
+    console.log("✅ Update response from API:", response);
+    return response;
 };
-export async function getIssuesTotalAdmin() {
-    return authorizedFetch('api/admin/issues/total', {
-        method: 'GET',
-    });
-}
+export const getIssueStats = async () => {
+    const data = await authorizedFetch('api/admin/issues/total', { method: 'GET' });
+    // backend returns: { total, open, resolved }
+    return data;
+};
+
 export async function employeeLogin(credentials) {
     return authorizedFetch('api/employee/login', {
         method: 'POST',

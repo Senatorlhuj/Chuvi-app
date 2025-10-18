@@ -1,5 +1,5 @@
 <template>
-  <div :class="['p-5 rounded-xl shadow-md text-bone-white', color]">
+  <div :class="['p-5 rounded-xl  text-bone-white', color]">
     <div class="flex items-center justify-between">
       <p class="text-sm font-medium opacity-80">{{ title }}</p>
 

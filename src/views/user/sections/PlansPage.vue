@@ -58,7 +58,7 @@
         <!-- LEFT: Plans List -->
         <div class="flex-1 space-y-4">
           <div
-            v-for="(plan, index) in plans"
+            v-for="(plan) in plans"
             :key="plan.code"
             @click="selectedPlan = plan"
             class="cursor-pointer p-6 rounded-2xl border-1 transition-all duration-500 "
@@ -235,6 +235,7 @@ import {
   subscribeToPlan,
   fetchUserProfile,
 } from "@/services/api";
+import { useToast } from "@/composables/useToast";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
   faCheckCircle,
@@ -257,6 +258,8 @@ const isAuthenticated = ref(false);
 const pricingSection = ref(null);
 const planCards = ref([]);
 const planDetails = ref(null);
+const { showSuccess, showError } = useToast();
+
 
 // Currency format
 const formatPrice = (price) =>
@@ -299,7 +302,7 @@ const loadPlans = async () => {
 };
 
 // Select Plan
-const selectPlan = (code) => {
+const selectPlan = () => {
   if (!isAuthenticated.value) {
     localStorage.setItem("redirectAfterRegister", window.location.pathname);
     window.location.href = "/register";
@@ -316,18 +319,38 @@ const initiateSubscription = async () => {
   }
 
   isSubscribing.value = true;
+  paymentError.value = null;
+
   try {
+    // 🔹 Mark that a payment is in progress
+    localStorage.setItem("subscribing", "true");
+
     const response = await subscribeToPlan({
       planCode: selectedPlan.value.code,
       gateway: selectedGateway.value,
     });
-    window.location.href = response.paymentLink;
+
+    if (response?.paymentLink) {
+      // ✅ Notify user before redirect
+      showSuccess("Redirecting to secure payment...");
+
+      console.log("Redirecting to payment gateway...");
+      window.location.href = response.paymentLink;
+    } else {
+      paymentError.value =
+        "Unexpected response from server. Please try again.";
+      localStorage.removeItem("subscribing");
+    }
   } catch (err) {
-    paymentError.value = err.message || "Payment failed.";
+    showError("Payment initialization failed.");
+    paymentError.value = err.message || "Payment initialization failed.";
+    localStorage.removeItem("subscribing");
   } finally {
     isSubscribing.value = false;
   }
 };
+
+
 
 const closeModal = () => {
   isPaymentModalOpen.value = false;

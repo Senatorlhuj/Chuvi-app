@@ -1,18 +1,25 @@
 <template>
-  <div class="flex h-screen bg-gray-100 ">
-    
+  <div class="flex h-screen bg-gradient-to-br from-bone-white via-cream/30 to-bone-white overflow-hidden">
+    <!-- Sidebar -->
     <EmployeeSidebar :is-open="isSidebarOpen" @close-sidebar="isSidebarOpen = false" />
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-      
+    <!-- Main Content Area -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <!-- Header/Navbar -->
       <EmployeeNavbar @toggle-sidebar="isSidebarOpen = !isSidebarOpen" />
 
-      <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6">
-        <router-view />
+      <!-- Main Content with Gradient Background -->
+      <main class="flex-1 overflow-x-hidden overflow-y-auto">
+        <div class="p-4 md:p-6 lg:p-8 min-h-full">
+          <!-- Content Wrapper -->
+          <div class="max-w-7xl mx-auto">
+            <router-view />
+          </div>
+        </div>
       </main>
 
+      <!-- Footer -->
       <AdminFooter />
-
     </div>
   </div>
 </template>
@@ -25,3 +32,10 @@ import AdminFooter from '@/components/admin/AdminFooter.vue';
 
 const isSidebarOpen = ref(false);
 </script>
+
+<style scoped>
+/* Smooth transitions */
+* {
+  @apply transition-all duration-300;
+}
+</style>

@@ -1,568 +1,837 @@
 <template>
-  <div class="p-6 md:p-10">
-    <h2 class="text-2xl font-semibold text-navy-blue mb-6 text-center">
-      Your Order History
-    </h2>
-
-    <!-- Tabs -->
-    <div class="flex justify-center gap-4 mb-8 border-b pb-2">
-      <button
-        v-for="tab in tabs"
-        :key="tab"
-        @click="activeTab = tab"
-        class="px-4 py-2 rounded-t-md text-sm font-medium transition-all"
-        :class="[
-          activeTab === tab
-            ? 'bg-navy-blue text-white shadow-md'
-            : 'text-gray-600 hover:text-navy-blue hover:bg-gray-100',
-        ]"
-      >
-        {{ tab }}
-      </button>
-    </div>
-
-    <!-- Loading -->
+  <div
+    class="min-h-screen "
+  >
     <div
-      v-if="isLoading"
-      class="text-center text-charcoal/70 py-10 animate-pulse"
-    >
-      Loading your orders...
-    </div>
-
-    <!-- Error -->
-    <div v-else-if="error" class="text-center text-red-500 py-10">
-      {{ error }}
-    </div>
-
-    <!-- No Orders -->
-    <div
-      v-else-if="filteredOrders.length === 0"
-      class="text-center text-charcoal/70 py-10"
-    >
-      No {{ activeTab.toLowerCase() }} orders found.
-    </div>
-
-    <!-- Orders Grid -->
-    <div
-      v-else
-      class="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 max-w-5xl mx-auto"
+      class="border-b border-charcoal/10 mt-8"
     >
       <div
-        v-for="order in filteredOrders"
-        :key="order._id"
-        class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col justify-between hover:shadow-lg transition-all duration-300"
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between"
       >
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+          <button
+            @click="goBack"
+            class="p-2 hover:bg-white rounded-lg transition-colors duration-200 cursor-pointer"
+            title="Go back"
+          >
+            <svg
+              class="w-5 h-5 text-charcoal"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
           <div>
-            <h3 class="text-lg font-semibold text-navy-blue">
-              {{ order.orderId || order._id.slice(-6) }}
-            </h3>
-            <p class="text-sm text-gray-500">
-              {{ new Date(order.createdAt).toLocaleDateString() }}
+            <h1 class="text-2xl sm:text-3xl font-bold text-navy-blue">
+              Order History
+            </h1>
+            <p class="text-xs sm:text-sm text-charcoal/70 mt-1">
+              Track and manage your orders
             </p>
           </div>
-
-          <span
-            class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
-            :class="statusClass(order.status)"
-          >
-            {{ order.status }}
-          </span>
         </div>
-
-        <!-- Dynamic Headline -->
-        <div class="mb-3">
-          <p
-            v-if="['Booked', 'Out For Delivery'].includes(order.status)"
-            class="text-blue-700 font-semibold"
-          >
-            {{
-              order.status === "Booked" ? "Order Confirmed" : "Order Shipped"
-            }}
-          </p>
-          <p
-            v-else-if="order.status === 'Delivered'"
-            class="text-green-700 font-semibold"
-          >
-            Order Delivered
-          </p>
-
-          <p
-            v-else-if="order.status === 'Picked Up'"
-            class="text-blue-700 font-semibold"
-          >
-            Order Picked Up
+        <div class="text-right hidden sm:block">
+          <p class="text-xs text-charcoal/60">Total Orders</p>
+          <p class="text-2xl font-bold text-golden-brown">
+            {{ orders.length }}
           </p>
         </div>
+      </div>
+    </div>
 
-        <!-- Order Info -->
-        <div class="text-sm text-gray-700 mb-3 space-y-1">
-          <p>
-            <strong>Total:</strong>
-            ₦{{
-              (
-                order?.totals?.total ||
-                order?.totals?.grandTotal ||
-                order?.total ||
-                0
-              ).toLocaleString()
-            }}
-          </p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <div class="flex gap-3 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+          <button
+            v-for="tab in tabs"
+            :key="tab"
+            @click="activeTab = tab"
+            class="px-6 py-3 rounded-xl font-medium text-sm sm:text-base transition-all duration-300 whitespace-nowrap flex items-center gap-2 cursor-pointer"
+            :class="[
+              activeTab === tab
+                ? 'bg-charcoal text-bone-white  scale-105'
+                : 'bg-bone-white text-charcoal hover:bg-white border border-charcoal/20 hover:border-golden-brown/30',
+            ]"
+          >
+            <i v-if="tab === 'Active'" class="fa-solid fa-bolt text-lg"></i>
+            <i
+              v-else-if="tab === 'Completed'"
+              class="fa-solid fa-circle-check text-lg"
+            ></i>
+            <i v-else class="fa-solid fa-circle-xmark text-lg"></i>
 
-          <!-- For Cancelled Orders: Show minimal info -->
-          <template v-if="order.status === 'Cancelled'">
-            <p>
-              <span class="font-medium">Services:</span>
-              <span
-                v-if="order.items && order.items.length"
-                class="text-gray-600"
-              >
-                {{
-                  order.items
-                    .map((item) => item.serviceName || item.name)
-                    .join(", ")
-                }}
-              </span>
-              <span v-else class="text-gray-500">No items</span>
-            </p>
-          </template>
-
-          <!-- For Active/Completed Orders: Show full details -->
-          <template v-else>
-            <p>
-              <span class="font-medium">Items:</span>
-              {{ order.items?.length || 0 }}
-            </p>
-
-            <ul
-              class="ml-4 list-disc text-gray-600"
-              v-if="order.items && order.items.length"
+            {{ tab }}
+            <span
+              class="ml-1 text-xs opacity-75 bg-charcoal/10 px-2 py-1 rounded-full font-semibold"
             >
-              <li
-                v-for="item in order.items"
-                :key="item._id"
-                class="py-2 flex justify-between text-sm text-gray-700"
-              >
-                <span
-                  >{{ item.quantity }} × {{ item.serviceName }}
-                  {{ item.serviceTier }}</span
-                >
-                <span
-                  >₦{{
-                    (item.price || item.subtotal || 0).toLocaleString()
-                  }}</span
-                >
-              </li>
-            </ul>
-          </template>
+              {{ getTabCount(tab) }}
+            </span>
+          </button>
         </div>
+      </div>
 
-        <!-- Footer -->
-        <div class="flex flex-wrap justify-between items-center mt-4 gap-3">
-          <div v-if="['Delivered', 'Picked Up'].includes(order.status)">
-            <div class="text-sm text-gray-500">
-              <p>Have any complaint?</p>
-              <button
-                @click="openComplaintModal(order)"
-                class="mt-2 text-navy-blue font-medium hover:underline"
-              >
-                Leave a complaint
-              </button>
-            </div>
-          </div>
-
-          <div class="flex gap-2 ml-auto">
-            <!-- Active Orders -->
+      <div class="transition-all duration-300">
+        <div
+          v-if="isLoading"
+          class="flex flex-col items-center justify-center py-20"
+        >
+          <div class="relative w-16 h-16 mb-4">
             <div
-              v-if="
-                ['Booked', 'Out For Delivery', 'Picked Up'].includes(
-                  order.status
-                )
-              "
-              class="flex justify-center gap-3"
-            >
-              <button
-                @click="openCancelModal(order)"
-                class="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+              class="absolute inset-0 bg-gradient-to-r from-golden-brown to-pure-gold rounded-full animate-spin"
+              style="mask-image: conic-gradient(transparent 25%, black)"
+            ></div>
+          </div>
+          <p class="text-charcoal/70 font-medium animate-pulse">
+            Loading your orders...
+          </p>
+        </div>
+
+        <div
+          v-else-if="error"
+          class="bg-white border-2 border-golden-brown rounded-2xl p-6 text-center"
+        >
+          <i class="fa-solid fa-triangle-exclamation text-4xl mb-3"></i>
+          <p class="text-charcoal font-medium">{{ error }}</p>
+          <button
+            @click="fetchOrders"
+            class="mt-4 px-6 py-2 bg-charcoal text-bone-white rounded-lg hover:bg-navy-blue transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+
+        <div v-else-if="filteredOrders.length === 0" class="text-center py-20">
+          <i class="fa-solid fa-box-open text-6xl mb-4"></i>
+          <p class="text-charcoal text-lg font-medium mb-2">
+            No {{ activeTab.toLowerCase() }} orders found
+          </p>
+          <p class="text-charcoal/70 text-sm mb-6">{{ getEmptyMessage() }}</p>
+          <button
+            v-if="activeTab !== 'Active'"
+            @click="activeTab = 'Active'"
+            class="px-6 py-2 bg-charcoal text-bone-white rounded-lg hover:bg-navy-blue transition-colors"
+          >
+            View Active Orders
+          </button>
+        </div>
+
+        <div
+          v-else
+          class="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-1"
+        >
+          <div
+            v-for="order in filteredOrders"
+            :key="order._id"
+            class="group bg-bone-white rounded-2xl  transition-all duration-300 border border-charcoal/10 overflow-hidden hover:border-golden-brown/30"
+          >
+            <div
+              class="h-1 bg-gradient-to-r"
+              :class="getStatusGradient(order.status)"
+            ></div>
+
+            <div class="p-6 sm:p-8">
+              <div
+                class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6"
               >
-                Cancel Order
-              </button>
-              <button
-                @click="
-                  router.push({
-                    name: 'TrackOrder',
-                    params: { id: order.orderId },
-                  })
-                "
-                class="px-4 py-2 text-sm bg-navy-blue text-white rounded-md hover:bg-charcoal transition"
-              >
-                Track Order
-              </button>
+                <div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <h3 class="text-xl sm:text-xl font-bold text-navy-blue">
+                      {{ order.orderId || order._id.slice(-6) }}
+                    </h3>
+                    <span
+                      class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                      :class="getStatusBadge(order.status)"
+                    >
+                      {{ order.status }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-charcoal/60 flex items-center gap-1">
+                    <i class="fa-solid fa-calendar"></i>
+                    {{
+                      new Date(order.createdAt).toLocaleDateString("en-NG", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
+                    }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-charcoal/60 uppercase tracking-wider">
+                    Total Amount
+                  </p>
+                  <p class="text-2xl font-bold text-golden-brown">
+                    ₦{{
+                      (
+                        order?.totals?.total ||
+                        order?.totals?.grandTotal ||
+                        order?.total ||
+                        0
+                      ).toLocaleString()
+                    }}
+                  </p>
+                </div>
+              </div>
+
+           <div class="mb-6 p-4 rounded-xl" :class="getStatusMessageBg(order.status)">
+                <p class="text-sm font-semibold flex items-center gap-2" :class="getStatusTextColor(order.status)">
+                  
+                  <i class="fa-solid" :class="{
+                      // Active/In-Progress
+                      'fa-calendar-check': order.status === 'Booked',
+                      'fa-truck-fast': order.status === 'Out For Delivery',
+                      'fa-hand-holding': order.status === 'Picked Up',
+                      
+                      // Completed/Final
+                      'fa-box-archive': order.status === 'Delivered',
+                      'fa-circle-xmark': order.status === 'Cancelled',
+                      
+                      // Default/Fallback
+                      'fa-info-circle': !['Booked', 'Out For Delivery', 'Picked Up', 'Delivered', 'Cancelled'].includes(order.status)
+                  }"></i>
+                  
+                  {{ getStatusMessage(order.status) }}
+                </p>
+              </div>
+
+              <div class="mb-6">
+                <p
+                  class="text-xs font-bold text-charcoal/60 uppercase tracking-widest mb-3"
+                >
+                  Items
+                </p>
+                <div class="space-y-3">
+                  <template v-if="order.items && order.items.length">
+                    <div
+                      v-for="item in order.items"
+                      :key="item._id"
+                      class="flex items-center gap-3 p-3 bg-white rounded-lg border border-charcoal/10 group/item hover:bg-charcoal/10 transition-colors"
+                    >
+                      <div
+                        class="flex-shrink-0 w-10 h-10 bg-golden-brown rounded-lg flex items-center justify-center text-bone-white text-sm font-bold"
+                      >
+                        {{ item.quantity }}
+                      </div>
+                      <div class="flex-grow min-w-0">
+                        <p class="text-sm font-semibold text-charcoal truncate">
+                          {{ item.serviceName || item.name }}
+                        </p>
+                        <p class="text-xs text-charcoal/60">
+                          {{ item.serviceTier }}
+                        </p>
+                      </div>
+                      <p class="text-sm font-bold text-charcoal flex-shrink-0">
+                        ₦{{
+                          (item.price || item.subtotal || 0).toLocaleString()
+                        }}
+                      </p>
+                    </div>
+                  </template>
+                  <p v-else class="text-sm text-charcoal/60 italic">No items</p>
+                </div>
+              </div>
+
+              <div class="border-t border-charcoal/10 pt-6 mb-6">
+                <div
+                  v-if="['Delivered', 'Picked Up'].includes(order.status)"
+                  class="mb-6"
+                >
+                  <p
+                    class="text-xs font-bold text-charcoal/60 uppercase tracking-widest mb-3"
+                  >
+                    Support
+                  </p>
+                  <button
+                    @click="openComplaintModal(order)"
+                    class="w-full py-2 px-4 bg-white text-golden-brown rounded-lg hover:bg-pure-gold/20 border border-golden-brown/30 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Report an Issue
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3">
+                <template
+                  v-if="
+                    ['Booked', 'Out For Delivery', 'Picked Up'].includes(
+                      order.status
+                    )
+                  "
+                >
+                  <button
+                    @click="
+                      router.push({
+                        name: 'TrackOrder',
+                        params: { id: order.orderId },
+                      })
+                    "
+                    class="w-full py-3 px-4 bg-charcoal text-bone-white rounded-xl font-semibold  transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <i class="fa-solid fa-location-dot"></i>
+                    Track Order
+                  </button>
+                  <button
+                    @click="openCancelModal(order)"
+                    class="w-full py-2 px-4 bg-white text-golden-brown rounded-lg hover:bg-white/80 border border-golden-brown/30 text-sm font-medium transition-colors cursor-pointer"
+                  >
+                    Cancel Order
+                  </button>
+                </template>
+
+                <template v-else-if="order.status === 'Delivered'">
+                  <div class="grid grid-cols-2 gap-3">
+                    <button
+                      @click="downloadReceipt(order)"
+                      class="py-3 px-4 bg-white text-golden-brown rounded-xl border border-golden-brown/30 font-semibold hover:bg-white/80 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    >
+                      <i
+                        v-if="loadingReceipt[order._id]"
+                        class="fa-solid fa-clock-rotate-left animate-spin"
+                      ></i>
+                      <i v-else class="fa-solid fa-file-lines"></i>
+                      E-Receipt
+                    </button>
+                    <button
+                      @click="openReviewModal(order)"
+                      class="py-3 px-4 bg-charcoal text-pure-gold rounded-xl border border-pure-gold/40 font-semibold hover:bg-pure-gold/30 transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    >
+                      <i class="fa-solid fa-star"></i>
+                      Review
+                    </button>
+                  </div>
+                </template>
+
+                <template v-else-if="order.status === 'Cancelled'">
+                  <button
+                    @click="openOrderDetails(order.orderId)"
+                    class="py-3 px-4 bg-charcoal/10 text-charcoal rounded-xl border border-charcoal/20 font-semibold hover:bg-charcoal/20 transition-colors cursor-pointer"
+                  >
+                    View Details
+                  </button>
+                </template>
+              </div>
             </div>
-
-            <!-- Completed Orders -->
-            <template v-else-if="order.status === 'Delivered'">
-              <button
-                @click="downloadReceipt(order)"
-                class="px-4 py-2 bg-navy-blue text-white rounded hover:bg-navy-700 transition"
-              >
-                <span v-if="loadingReceipt[order._id]">Opening...</span>
-                <span v-else>E-Receipt</span>
-              </button>
-
-              <button
-                @click="openReviewModal(order)"
-                class="px-4 py-2 text-sm bg-navy-blue text-white rounded-md hover:bg-navy-700 transition"
-              >
-                Leave Review
-              </button>
-            </template>
-
-            <!-- Cancelled -->
-            <template v-else-if="order.status === 'Cancelled'">
-              <button
-                @click="openOrderDetails(order.orderId)"
-                class="text-sm text-blue-600 hover:underline font-medium"
-              >
-                View Details
-              </button>
-            </template>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Complaint Modal -->
     <div
       v-if="showComplaintModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
       @click="closeComplaintModal"
     >
       <div
-        class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
+        class="bg-bone-white rounded-t-3xl sm:rounded-2xl  w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
         @click.stop
       >
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">
-          Submit a Complaint
-        </h2>
-
-        <p class="text-gray-600 mb-2">
-          Regarding order
-          <strong class="text-gray-800">{{
-            selectedComplaintOrder?.orderId ||
-            selectedComplaintOrder?._id.slice(-6)
-          }}</strong>
-        </p>
-
-        <textarea
-          v-model="complaintMessage"
-          placeholder="Describe your issue..."
-          rows="4"
-          class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-navy-blue focus:outline-none resize-none mb-4"
-        ></textarea>
-
-        <div class="flex justify-end gap-3">
+        <div
+          class="sticky top-0 bg-charcoal p-6 text-bone-white flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3 cursor-pointer">
+            <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            <h2 class="text-xl font-bold">Report Issue</h2>
+          </div>
           <button
             @click="closeComplaintModal"
-            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+            class="p-2 hover:bg-black/10 rounded-lg transition-colors cursor-pointer"
           >
-            Cancel
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
-          <button
-            @click="submitComplaint"
-            :disabled="submittingComplaint"
-            class="px-4 py-2 bg-navy-blue text-white rounded hover:bg-navy-700 transition disabled:opacity-50"
-          >
-            <span v-if="submittingComplaint">Submitting...</span>
-            <span v-else>Submit</span>
-          </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <div>
+            <p class="text-sm text-charcoal/60 mb-1">Order</p>
+            <div
+              class="px-4 py-3 bg-white rounded-xl border border-charcoal/10"
+            >
+              <p class="font-bold text-charcoal">
+                {{
+                  selectedComplaintOrder?.orderId ||
+                  selectedComplaintOrder?._id.slice(-6)
+                }}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-charcoal mb-2 block"
+              >Describe the issue</label
+            >
+            <textarea
+              v-model="complaintMessage"
+              placeholder="Tell us what went wrong..."
+              rows="5"
+              class="w-full border border-charcoal/20 rounded-xl p-4 focus:ring-2 focus:ring-golden-brown/30 focus:border-transparent outline-none resize-none text-sm text-charcoal placeholder-charcoal/40"
+            ></textarea>
+            <p class="text-xs text-charcoal/60 mt-2">
+              {{ complaintMessage.length }}/500 characters
+            </p>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button
+              @click="closeComplaintModal"
+              class="flex-1 py-3 bg-charcoal/10 text-charcoal rounded-xl hover:bg-charcoal/20 font-semibold transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              @click="submitComplaint"
+              :disabled="submittingComplaint || !complaintMessage.trim()"
+              class="flex-1 py-3 bg-charcoal text-bone-white rounded-xl font-semibold transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed "
+            >
+              {{ submittingComplaint ? "Submitting..." : "Submit Report" }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Cancel Modal -->
     <div
       v-if="showCancelModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
       @click="closeCancelModal"
     >
       <div
-        class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
+        class="bg-bone-white rounded-t-3xl sm:rounded-2xl  w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
         @click.stop
       >
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">Cancel Order</h2>
-        <p class="text-gray-600 mb-4">
-          Are you sure you want to cancel order
-          <strong class="text-gray-800">{{
-            selectedOrder?.orderId || selectedOrder?._id.slice(-6)
-          }}</strong
-          >?
-        </p>
-
-        <!-- Reason Selection -->
-        <div class="space-y-2 mb-4">
-          <p class="text-gray-700 font-medium mb-2">Select a reason:</p>
-          <div
-            v-for="reason in cancelReasons"
-            :key="reason"
-            class="flex items-center gap-2"
-          >
-            <input
-              type="radio"
-              :id="reason"
-              :value="reason"
-              v-model="selectedReason"
-              class="text-navy-blue focus:ring-navy-blue"
-            />
-            <label :for="reason" class="text-gray-700">{{ reason }}</label>
+        <div
+          class="sticky top-0 bg-charcoal p-6 text-bone-white flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-hand text-2xl"></i>
+            <h2 class="text-xl font-bold">Cancel Order</h2>
           </div>
-
-          <!-- 'Other' reason -->
-          <div class="mt-2">
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                value="Other"
-                v-model="selectedReason"
-                class="text-navy-blue focus:ring-navy-blue"
-              />
-              <span class="text-gray-700">Other</span>
-            </label>
-
-            <textarea
-              v-if="selectedReason === 'Other'"
-              v-model="otherReason"
-              placeholder="Please specify your reason..."
-              rows="3"
-              class="w-full mt-2 border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-navy-blue focus:outline-none resize-none"
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex justify-end gap-3 mt-4">
           <button
             @click="closeCancelModal"
-            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+            class="p-2 hover:bg-black/10 rounded-lg transition-colors cursor-pointer"
           >
-            No, Keep Order
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div>
+            <p class="text-sm text-charcoal/60 mb-2">Cancelling Order</p>
+            <div
+              class="px-4 py-3 bg-white rounded-xl border border-charcoal/10"
+            >
+              <p class="font-bold text-charcoal">
+                {{ selectedOrder?.orderId || selectedOrder?._id.slice(-6) }}
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-white border border-golden-brown/30 rounded-xl">
+            <p class="text-sm text-charcoal">
+              <strong
+                ><i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                Note:</strong
+              >
+              This action cannot be undone
+            </p>
+          </div>
+
+          <div>
+            <p
+              class="text-sm font-bold text-charcoal uppercase tracking-widest mb-4"
+            >
+              Why are you cancelling?
+            </p>
+            <div class="space-y-3">
+              <div
+                v-for="reason in cancelReasons"
+                :key="reason"
+                class="cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  :id="`reason-${reason}`"
+                  :value="reason"
+                  v-model="selectedReason"
+                  class="hidden peer"
+                />
+                <label
+                  :for="`reason-${reason}`"
+                  class="flex items-center gap-3 p-4 rounded-xl border-2 border-charcoal/10 cursor-pointer transition-all peer-checked:border-golden-brown peer-checked:bg-white"
+                >
+                  <div
+                    class="w-5 h-5 rounded-full border-2 border-charcoal/30 flex items-center justify-center peer-checked:border-golden-brown/30 peer-checked:bg-charcoal"
+                  >
+                    <span
+                      v-if="selectedReason === reason"
+                      class="w-2 h-2 bg-bone-white rounded-full"
+                    ></span>
+                  </div>
+                  <span class="text-sm font-medium text-charcoal">{{
+                    reason
+                  }}</span>
+                </label>
+              </div>
+
+              <div>
+                <input
+                  type="radio"
+                  id="reason-other"
+                  value="Other"
+                  v-model="selectedReason"
+                  class="hidden peer"
+                />
+                <label
+                  for="reason-other"
+                  class="flex items-center gap-3 p-4 rounded-xl border-2 border-charcoal/10 cursor-pointer transition-all peer-checked:border-golden-brown/30 peer-checked:bg-white"
+                >
+                  <div
+                    class="w-5 h-5 rounded-full border-2 border-charcoal/30 flex items-center justify-center peer-checked:border-golden-brown peer-checked:bg-charcoal"
+                  >
+                    <span
+                      v-if="selectedReason === 'Other'"
+                      class="w-2 h-2 bg-bone-white rounded-full"
+                    ></span>
+                  </div>
+                  <span class="text-sm font-medium text-charcoal"
+                    >Something else</span
+                  >
+                </label>
+
+                <textarea
+                  v-if="selectedReason === 'Other'"
+                  v-model="otherReason"
+                  placeholder="Please tell us more..."
+                  rows="3"
+                  class="w-full mt-3 border border-charcoal/20 rounded-xl p-3 text-sm focus:ring-2 focus:ring-golden-brown/30 focus:border-transparent outline-none resize-none text-charcoal placeholder-charcoal/40"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-charcoal/10">
+            <button
+              @click="closeCancelModal"
+              class="flex-1 py-3 bg-charcoal/10 text-charcoal rounded-xl hover:bg-charcoal/20 font-semibold transition-colors cursor-pointer"
+            >
+              Keep Order
+            </button>
+            <button
+              @click="confirmCancelOrder"
+              :disabled="!selectedReason"
+              class="flex-1 py-3 bg-charcoal text-bone-white rounded-xl  font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Cancel Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showReviewModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
+      @click="closeReviewModal"
+    >
+      <div
+        class="bg-bone-white rounded-t-3xl sm:rounded-2xl  w-full sm:max-w-md"
+        @click.stop
+      >
+        <div
+          class="bg-charcoal p-6 text-bone-white flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl"
+        >
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-star text-2xl"></i>
+            <h2 class="text-xl font-bold">Share Your Feedback</h2>
+          </div>
           <button
-            @click="confirmCancelOrder"
-            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition disabled:opacity-50"
-            :disabled="!selectedReason"
+            @click="closeReviewModal"
+            class="p-2 hover:bg-black/10 rounded-lg transition-colors cursor-pointer"
           >
-            Yes, Cancel Order
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div class="text-center">
+            <p class="text-sm font-semibold text-charcoal/70 mb-4">
+              How would you rate this order?
+            </p>
+            <div class="flex justify-center gap-3">
+              <button
+                v-for="n in 5"
+                :key="n"
+                @click="reviewRating = n"
+                class="text-3xl transition-all duration-200 transform cursor-pointer"
+                :class="[
+                  n <= reviewRating
+                    ? 'text-pure-gold scale-110'
+                    : 'text-charcoal/30 hover:scale-110',
+                ]"
+              >
+                <i class="fa-solid fa-star"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-charcoal mb-2 block"
+              >Your feedback</label
+            >
+            <textarea
+              v-model="reviewComment"
+              rows="4"
+              placeholder="Tell us what you think..."
+              class="w-full border border-charcoal/20 rounded-xl p-4 focus:ring-2 focus:ring-golden-brown/30 focus:border-transparent outline-none resize-none text-sm text-charcoal placeholder-charcoal/40"
+            ></textarea>
+            <p class="text-xs text-charcoal/60 mt-2">
+              {{ reviewComment.length }}/500 characters
+            </p>
+          </div>
+
+          <button
+            @click="submitReview"
+            :disabled="submitting || !reviewRating"
+            class="w-full py-3 bg-charcoal/30 text-charcoal rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer hover:bg-charcoal hover:text-bone-white transition-all duration-200">
+            <i v-if="!submitting" class="fa-solid fa-sparkles"></i>
+            <span>{{ submitting ? "Submitting..." : "Submit Review" }}</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Review Modal -->
-    <transition name="fade">
+    <div
+      v-if="showOrderModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
+      @click="closeOrderModal"
+    >
       <div
-        v-if="showReviewModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        @click="closeReviewModal"
+        class="bg-bone-white rounded-t-3xl sm:rounded-2xl  w-full sm:max-w-md max-h-[90vh] overflow-y-auto"
+        @click.stop
       >
         <div
-          class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 relative"
-          @click.stop
+          class="sticky top-0 bg-charcoal p-6 text-bone-white flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl"
         >
-          <button
-            class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-            @click="closeReviewModal"
-          >
-            ✕
-          </button>
-          <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">
-            Leave a Review
-          </h3>
-
-          <!-- Stars -->
-          <div class="flex justify-center mb-4">
-            <i
-              v-for="n in 5"
-              :key="n"
-              class="fa-star text-2xl cursor-pointer transition"
-              :class="[
-                n <= reviewRating ? 'fas text-yellow-400' : 'far text-gray-400',
-              ]"
-              @click="reviewRating = n"
-            ></i>
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-clipboard-list text-2xl"></i>
+            <h2 class="text-xl font-bold">Order Details</h2>
           </div>
-
-          <!-- Comment -->
-          <textarea
-            v-model="reviewComment"
-            rows="4"
-            placeholder="Write your feedback..."
-            class="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-navy-blue outline-none"
-          ></textarea>
-
-          <!-- Submit -->
-          <button
-            @click="submitReview"
-            :disabled="submitting"
-            class="mt-4 w-full bg-navy-blue text-white py-3 rounded-md font-semibold hover:opacity-90 transition disabled:opacity-50"
-          >
-            {{ submitting ? "Submitting..." : "Submit Review" }}
-          </button>
-        </div>
-      </div>
-    </transition>
-  </div>
-
-  <!-- Order Details Modal -->
-  <div
-    v-if="showOrderModal"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-  >
-    <div class="bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-6 relative">
-      <button
-        @click="closeOrderModal"
-        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-      >
-        <i class="ri-close-line text-xl"></i>
-      </button>
-
-      <h2 class="text-lg font-semibold mb-3">Order Details</h2>
-
-      <!-- Guarded to prevent null reference -->
-      <div v-if="selectedOrder">
-        <div class="space-y-2 text-sm">
-          <p><strong>Order ID:</strong> {{ selectedOrder.orderId }}</p>
-          <p>
-            <strong>Status:</strong>
-            <span
-              :class="statusClass(selectedOrder.status)"
-              class="px-2 py-1 rounded text-xs font-semibold capitalize"
-              >{{ selectedOrder.status }}</span
-            >
-          </p>
-          <p>
-            <strong>Date & Time:</strong>
-            {{
-              new Date(selectedOrder.createdAt).toLocaleString("en-NG", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })
-            }}
-          </p>
-
-          <p>
-            <strong>Total:</strong>
-            ₦{{
-              (
-                selectedOrder?.totals?.total ||
-                selectedOrder?.totals?.grandTotal ||
-                selectedOrder?.total ||
-                0
-              ).toLocaleString()
-            }}
-          </p>
-        </div>
-
-        <hr class="my-4" />
-
-        <p class="font-medium mb-2">
-          Items ({{ selectedOrder.items?.length || 0 }})
-        </p>
-        <div
-          v-if="selectedOrder.items && selectedOrder.items.length"
-          class="space-y-2"
-        >
-          <div
-            v-for="(item, index) in selectedOrder.items"
-            :key="index"
-            class="flex justify-between text-sm py-2 border-b last:border-b-0"
-          >
-            <span
-              >{{ item.quantity }} × {{ item.serviceName || item.name }}
-              {{ item.serviceTier }}</span
-            >
-            <span
-              >₦{{ (item.price || item.subtotal || 0).toLocaleString() }}</span
-            >
-          </div>
-        </div>
-        <div v-else class="text-sm text-gray-500">No items available.</div>
-
-        <!-- Cancellation Details -->
-        <div
-          v-if="selectedOrder.status === 'Cancelled'"
-          class="border-t pt-4 mt-4 bg-red-50 p-3 rounded-lg"
-        >
-          <h3 class="text-sm font-semibold text-red-600 mb-2">
-            Cancellation Details
-          </h3>
-
-          <div
-            v-if="
-              selectedOrder.cancellationReason &&
-              selectedOrder.cancelledBy !== 'admin'
-            "
-          >
-            <p class="text-xs text-gray-600 mb-1">
-              <strong>Cancelled by:</strong> You
-            </p>
-            <p class="text-sm text-gray-700">
-              <strong>Reason:</strong> {{ selectedOrder.cancellationReason }}
-            </p>
-          </div>
-
-          <div v-else-if="selectedOrder.cancelledBy === 'admin'">
-            <p class="text-xs text-gray-600 mb-1">
-              <strong>Cancelled by:</strong> Administrator
-            </p>
-            <p class="text-sm text-gray-700">
-              <strong>Admin Note:</strong>
-              {{
-                selectedOrder.cancellationReason ||
-                "No reason provided by admin"
-              }}
-            </p>
-          </div>
-
-          <div v-else>
-            <p class="text-sm text-gray-600">
-              This order was cancelled.
-              {{ selectedOrder.cancellationReason || "No reason provided." }}
-            </p>
-          </div>
-
-          <p
-            v-if="selectedOrder.cancelledAt"
-            class="text-xs text-gray-500 mt-2"
-          >
-            <strong>Cancelled on:</strong>
-            {{
-              new Date(selectedOrder.cancelledAt).toLocaleString("en-NG", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })
-            }}
-          </p>
-        </div>
-        <div class="flex justify-end mt-6">
           <button
             @click="closeOrderModal"
-            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700"
+            class="p-2 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="selectedOrder" class="p-6 space-y-6">
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <p
+                  class="text-xs text-charcoal/60 uppercase tracking-widest font-semibold"
+                >
+                  Order ID
+                </p>
+                <p class="text-lg font-bold text-charcoal">
+                  {{ selectedOrder.orderId }}
+                </p>
+              </div>
+              <span
+                :class="getStatusBadge(selectedOrder.status)"
+                class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+              >
+                {{ selectedOrder.status }}
+              </span>
+            </div>
+
+            <div>
+              <p
+                class="text-xs text-charcoal/60 uppercase tracking-widest font-semibold"
+              >
+                Date & Time
+              </p>
+              <p class="text-charcoal">
+                {{
+                  new Date(selectedOrder.createdAt).toLocaleString("en-NG", {
+                    dateStyle: "full",
+                    timeStyle: "short",
+                  })
+                }}
+              </p>
+            </div>
+
+            <div>
+              <p
+                class="text-xs text-charcoal/60 uppercase tracking-widest font-semibold"
+              >
+                Total Amount
+              </p>
+              <p class="text-2xl font-bold text-golden-brown">
+                ₦{{
+                  (
+                    selectedOrder?.totals?.total ||
+                    selectedOrder?.totals?.grandTotal ||
+                    selectedOrder?.total ||
+                    0
+                  ).toLocaleString()
+                }}
+              </p>
+            </div>
+          </div>
+
+          <div class="border-t border-charcoal/10"></div>
+
+          <div>
+            <p
+              class="text-xs font-bold text-charcoal/60 uppercase tracking-widest mb-3"
+            >
+              Items ({{ selectedOrder.items?.length || 0 }})
+            </p>
+            <div
+              v-if="selectedOrder.items && selectedOrder.items.length"
+              class="space-y-3"
+            >
+              <div
+                v-for="(item, index) in selectedOrder.items"
+                :key="index"
+                class="p-4 bg-white rounded-xl border border-charcoal/10"
+              >
+                <div class="flex items-center gap-3 mb-2">
+                  <div
+                    class="w-8 h-8 bg-golden-brown rounded-lg flex items-center justify-center text-bone-white text-xs font-bold"
+                  >
+                    {{ item.quantity }}
+                  </div>
+                  <p class="font-semibold text-charcoal">
+                    {{ item.serviceName || item.name }}
+                  </p>
+                </div>
+                <p class="text-xs text-charcoal/60 mb-2">
+                  {{ item.serviceTier }}
+                </p>
+                <p class="text-sm font-bold text-charcoal">
+                  ₦{{ (item.price || item.subtotal || 0).toLocaleString() }}
+                </p>
+              </div>
+            </div>
+            <div v-else class="text-sm text-charcoal/60 italic">
+              No items available
+            </div>
+          </div>
+
+          <div
+            v-if="selectedOrder.status === 'Cancelled'"
+            class="border-t border-charcoal/10 pt-6"
+          >
+            <div class="p-4 bg-white border border-charcoal/10 rounded-xl">
+              <p
+                class="text-xs font-bold text-charcoal/70 uppercase tracking-widest mb-3"
+              >
+                Cancellation Details
+              </p>
+
+              <div class="space-y-2 text-sm">
+                <p
+                  v-if="selectedOrder.cancelledBy === 'admin'"
+                  class="text-charcoal"
+                >
+                  <strong>Cancelled by:</strong> Administrator
+                </p>
+                <p v-else class="text-charcoal">
+                  <strong>Cancelled by:</strong> You
+                </p>
+                <p class="text-charcoal">
+                  <strong>Reason:</strong>
+                  {{ selectedOrder.cancellationReason || "No reason provided" }}
+                </p>
+                <p
+                  v-if="selectedOrder.cancelledAt"
+                  class="text-charcoal/60 text-xs pt-2"
+                >
+                  <i class="fa-solid fa-calendar-alt mr-1"></i>
+                  {{
+                    new Date(selectedOrder.cancelledAt).toLocaleString(
+                      "en-NG",
+                      { dateStyle: "medium", timeStyle: "short" }
+                    )
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            @click="closeOrderModal"
+            class="w-full py-3 bg-charcoal/10 hover:bg-charcoal/20 text-charcoal font-semibold rounded-xl transition-all cursor-pointer"
           >
             Close
           </button>
         </div>
-      </div>
 
-      <!-- Fallback in case selectedOrder is missing -->
-      <div v-else class="text-gray-500 text-sm text-center py-8">
-        No order details available.
+        <div v-else class="p-12 text-center">
+          <p class="text-charcoal/60">No order details available</p>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -596,7 +865,6 @@ const complaintMessage = ref("");
 const selectedComplaintOrder = ref(null);
 const submittingComplaint = ref(false);
 
-// Review modal state
 const showReviewModal = ref(false);
 const reviewRating = ref(0);
 const reviewComment = ref("");
@@ -643,6 +911,101 @@ const filteredOrders = computed(() => {
   }
 });
 
+function getTabCount(tab) {
+  if (tab === "Active") {
+    return orders.value.filter((o) =>
+      ["Booked", "Out For Delivery", "Picked Up"].includes(o.status)
+    ).length;
+  } else if (tab === "Completed") {
+    return orders.value.filter((o) => o.status === "Delivered").length;
+  } else {
+    return orders.value.filter((o) => o.status === "Cancelled").length;
+  }
+}
+
+function getEmptyMessage() {
+  if (activeTab.value === "Active") {
+    return "You don't have any active orders right now";
+  } else if (activeTab.value === "Completed") {
+    return "You haven't completed any orders yet";
+  } else {
+    return "You don't have any cancelled orders";
+  }
+}
+
+function getStatusIcon(status) {
+  const icons = {
+    Booked: "✓",
+    "Out For Delivery": "🚚",
+    Delivered: "✓",
+    "Picked Up": "✓",
+    Cancelled: "✕",
+  };
+  return icons[status] || "●";
+}
+
+function getStatusMessage(status) {
+  const messages = {
+    Booked: "Order confirmed and waiting to be processed",
+    "Out For Delivery": "Your order is on the way",
+    Delivered: "Order successfully delivered",
+    "Picked Up": "Order picked up successfully",
+    Cancelled: "Order has been cancelled",
+  };
+  return messages[status] || status;
+}
+
+function getStatusMessageBg(status) {
+  const bgClasses = {
+    Booked: "bg-white border border-golden-brown/30",
+    "Out For Delivery": "bg-white border border-golden-brown/30",
+    Delivered: "bg-white border border-golden-brown/30",
+    "Picked Up": "bg-white border border-golden-brown/30",
+    Cancelled: "bg-white border border-charcoal/20",
+  };
+  return bgClasses[status] || "bg-white border border-charcoal/10";
+}
+
+function getStatusTextColor(status) {
+  const textClasses = {
+    Booked: "text-golden-brown",
+    "Out For Delivery": "text-golden-brown",
+    Delivered: "text-golden-brown",
+    "Picked Up": "text-golden-brown",
+    Cancelled: "text-charcoal",
+  };
+  return textClasses[status] || "text-charcoal";
+}
+
+function getStatusGradient(status) {
+  const gradients = {
+    Booked: "from-golden-brown to-pure-gold",
+    "Out For Delivery": "from-golden-brown to-pure-gold",
+    Delivered: "from-golden-brown to-pure-gold",
+    "Picked Up": "from-golden-brown to-pure-gold",
+    Cancelled: "from-charcoal to-navy-blue",
+  };
+  return gradients[status] || "from-charcoal to-navy-blue";
+}
+
+function getStatusBadge(status) {
+  const badges = {
+    Booked: "bg-white text-golden-brown border border-golden-brown/30",
+    "Out For Delivery":
+      "bg-white text-golden-brown border border-golden-brown/30",
+    Delivered: "bg-white text-golden-brown border border-golden-brown/30",
+    "Picked Up": "bg-white text-golden-brown border border-golden-brown/30",
+    Cancelled: "bg-charcoal/10 text-charcoal border border-charcoal/20",
+  };
+  return (
+    badges[status] || "bg-charcoal/10 text-charcoal border border-charcoal/20"
+  );
+}
+
+function goBack() {
+  router.back();
+}
+
 function openCancelModal(order) {
   selectedOrder.value = order;
   showCancelModal.value = true;
@@ -655,15 +1018,12 @@ function closeCancelModal() {
   otherReason.value = "";
 }
 
-// Cancel order
 async function confirmCancelOrder() {
   if (!selectedOrder.value) return;
 
-  // ⚡ FIX APPLIED: Use the human-readable orderId for the API call
   const orderId = selectedOrder.value.orderId;
-
-  // Build reason message
   let reasonMessage = selectedReason.value;
+
   if (selectedReason.value === "Other") {
     if (!otherReason.value.trim()) {
       showError("Please specify your reason.");
@@ -676,10 +1036,8 @@ async function confirmCancelOrder() {
   closeCancelModal();
 
   try {
-    // The API service call now uses the human-readable orderId
     await cancelUserOrder(orderId, { reason: reasonMessage });
     orders.value = orders.value.map((o) =>
-      // The update logic must use orderId to find the order if we used orderId as the key for 'cancelling'
       o.orderId === orderId
         ? { ...o, status: "Cancelled", cancellationReason: reasonMessage }
         : o
@@ -693,6 +1051,7 @@ async function confirmCancelOrder() {
     cancelling.value[orderId] = false;
   }
 }
+
 function openOrderDetails(orderId) {
   const foundOrder = orders.value.find(
     (o) => o.orderId === orderId || o._id === orderId
@@ -716,6 +1075,10 @@ async function downloadReceipt(order) {
   try {
     const blob = await getOrderReceipt(order.orderId);
 
+    if (!blob) {
+      throw new Error("Receipt data is missing. Please try again.");
+    }
+
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank");
     showSuccess("E-Receipt opened in a new tab!");
@@ -727,7 +1090,6 @@ async function downloadReceipt(order) {
   }
 }
 
-// Review modal handlers
 function openReviewModal(order) {
   reviewOrderId.value = order.orderId;
   showReviewModal.value = true;
@@ -805,16 +1167,6 @@ async function submitComplaint() {
   }
 }
 
-function statusClass(status) {
-  return {
-    "bg-blue-100 text-blue-700":
-      status === "Booked" || status === "Out For Delivery",
-    "bg-green-100 text-green-700":
-      status === "Delivered" || status === "Picked Up",
-    "bg-red-100 text-red-700": status === "Cancelled",
-  };
-}
-
 onMounted(fetchOrders);
 </script>
 
@@ -826,5 +1178,19 @@ onMounted(fetchOrders);
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

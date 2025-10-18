@@ -61,16 +61,17 @@
     </div>
   </div>
    <HowItWorksSection />
-   <fee-section />
+   <plans-page />
   <delivery-section />
   <pricing-section />
-  <section class="container mx-auto px-4 py-16">
+   <section class="container mx-auto px-4 py-16">
     <AdCard :image-src="AdvertImg">
       <template #text>
         Leave your laundry to the experts and save 3+ hours per week.
       </template>
       <template #button>
-        <base-button padding="py-4 px-8">Book pickup</base-button>
+        <base-button padding="py-4 px-8" />
+       
       </template>
     </AdCard>
   </section>
@@ -79,7 +80,7 @@
 <script setup>
 import ServiceSection from "@/components/ServiceSection.vue";
 import HowItWorksSection from "@/components/HowItWorksSection.vue"; 
-import FeeSection from "@/components/FeeSection.vue";
+import PlansPage from '@/views/user/sections/PlansPage.vue';
 import DeliverySection from "@/components/DeliverySection.vue";
 import PricingSection from "@/components/PricingSection.vue";
 import AdCard from "@/components/atoms/AdCard.vue";

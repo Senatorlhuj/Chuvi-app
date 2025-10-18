@@ -23,3 +23,7 @@
   background-color: #996515;
   color: #996515;
 }
+
+button{
+  cursor: pointer;
+}

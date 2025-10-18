@@ -76,6 +76,7 @@ const handleLogin = async () => {
 
   try {
     const response = await employeeLogin(credentials.value);
+    console.log("Login response:", response);
 
     if (response && response.success && response.token) {
       // ✅ Save session

@@ -1,63 +1,78 @@
 <template>
-  <div class="space-y-6 p-6">
-    <h1 class="text-3xl font-bold text-navy-blue mb-6 border-b pb-2">
-      Customer Reviews
-    </h1>
+  <div class="min-h-screen p-4 md:p-8" style="background-color: #F5F1ED;">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #1A3A52;">
+          Customer Reviews
+        </h1>
+        <!-- <div class="h-1 w-16" style="background-color: #1A3A52;"></div> -->
+      </div>
 
-    <div v-if="loading" class="text-center p-12 text-golden-brown">
-      <font-awesome-icon icon="fa-solid fa-spinner" class="fa-spin text-4xl mb-2" />
-      <p class="text-lg">Loading reviews...</p>
-    </div>
+      <!-- Loading State -->
+      <div v-if="loading" class="flex flex-col items-center justify-center py-16">
+        <font-awesome-icon icon="fa-solid fa-spinner" class="fa-spin text-5xl mb-4" style="color: #8B7355;" />
+        <p class="text-lg" style="color: #8B7355;">Loading reviews...</p>
+      </div>
 
-    <div v-else-if="error" class="bg-destructive-foreground p-4 rounded-md text-destructive">
-      <p class="font-medium">Error loading reviews: {{ error }}</p>
-      <p>Please check the API server status.</p>
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="p-6 rounded-lg border-l-4" style="background-color: #FEF2F2; border-color: #DC2626;">
+        <p class="font-medium" style="color: #DC2626;">Error loading reviews: {{ error }}</p>
+        <p style="color: #DC2626;">Please check the API server status.</p>
+      </div>
 
-    <div v-else-if="reviews.length === 0" class="bg-cream p-6 rounded-lg text-center text-navy-blue">
-      <font-awesome-icon icon="fa-solid fa-bell-slash" class="text-4xl mb-3" />
-      <p class="font-medium">No reviews found yet.</p>
-    </div>
+      <!-- Empty State -->
+      <div v-else-if="reviews.length === 0" class="flex flex-col items-center justify-center py-16 rounded-lg" style="background-color: #F9F7F4;">
+        <font-awesome-icon icon="fa-solid fa-bell-slash" class="text-5xl mb-4" style="color: #1A3A52;" />
+        <p class="text-lg font-medium" style="color: #1A3A52;">No reviews found yet.</p>
+      </div>
 
-    <div v-else class="bg-bone-white rounded-xl shadow-lg overflow-hidden border border-border">
-      <table class="min-w-full divide-y divide-border">
-        <thead class="bg-navy-blue text-cream">
-          <tr>
-            <th class="py-3 px-6 text-left text-sm font-medium tracking-wider w-1/5">
-              User / Contact
-            </th>
-            <th class="py-3 px-6 text-center text-sm font-medium tracking-wider w-1/12">
-              Rating
-            </th>
-            <th class="py-3 px-6 text-left text-sm font-medium tracking-wider w-3/5">
-              Review
-            </th>
-            <th class="py-3 px-6 text-left text-sm font-medium tracking-wider w-1/12">
-              Date
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border text-charcoal">
-          <tr v-for="review in reviews" :key="review.id" class="hover:bg-cream transition duration-150">
-            <td class="py-4 px-6 whitespace-nowrap text-sm font-medium">
-              <div class="font-semibold">{{ review.user.username || 'N/A' }}</div>
-              <div class="text-xs text-muted-foreground">{{ review.user.phone || review.user.email }}</div>
-            </td>
-            <td class="py-4 px-6 text-center whitespace-nowrap text-sm">
-              <span class="text-pure-gold">
-                <font-awesome-icon icon="fa-solid fa-star" v-for="n in Math.floor(review.rating)" :key="n" />
+      <!-- Reviews Grid -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+        <div
+          v-for="review in reviews"
+          :key="review?._id"
+          class="rounded-xl  p-6 border"
+          style="background-color: #FFFBF7; border-color: #E5DDD5;"
+        >
+          <!-- Top Section: User Info & Rating -->
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+            <div class="flex-1">
+              <h3 class="font-semibold text-lg" style="color: #2C3E50;">
+                {{ review.user?.fullName || 'N/A' }}
+              </h3>
+              <p class="text-sm mt-1" style="color: #6B7280;">
+                {{ review.user?.phone || review.user?.email || 'N/A' }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1">
+                <font-awesome-icon
+                  icon="fa-solid fa-star"
+                  v-for="n in Math.floor(review?.rating)"
+                  :key="n"
+                  style="color: #D4A574;"
+                />
+              </div>
+              <span class="text-sm font-medium" style="color: #6B7280;">
+                {{ review.rating.toFixed(1) }}
               </span>
-              <span class="text-muted-foreground ml-1 text-xs">({{ review.rating.toFixed(1) }})</span>
-            </td>
-            <td class="py-4 px-6 text-sm max-w-lg">
-              {{ review.text || review.comment || 'No comment provided.' }}
-            </td>
-            <td class="py-4 px-6 whitespace-nowrap text-xs text-muted-foreground">
+            </div>
+          </div>
+
+          <!-- Review Comment -->
+          <p class="text-base leading-relaxed mb-4" style="color: #374151;">
+            {{ review.comment || 'No comment provided.' }}
+          </p>
+
+          <!-- Date -->
+          <div class="pt-3 border-t" style="border-color: #E5DDD5;">
+            <p class="text-xs" style="color: #9CA3AF;">
               {{ formatDate(review.createdAt) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -68,7 +83,6 @@ import { getAdminAllReviews } from '@/services/api.js';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faStar, faSpinner, faBellSlash } from '@fortawesome/free-solid-svg-icons';
 
-// Add necessary local icons to the library (assuming main.js hasn't added faStar, faSpinner, faBellSlash)
 library.add(faStar, faSpinner, faBellSlash);
 
 const reviews = ref([]);
@@ -80,10 +94,9 @@ const fetchReviews = async () => {
   error.value = null;
   try {
     const data = await getAdminAllReviews();
-    if (data && Array.isArray(data)) {
-      reviews.value = data;
+    if (data && Array.isArray(data.reviews)) {
+      reviews.value = data.reviews;
     } else {
-      // Handle case where API returns a non-array response but no error was thrown
       reviews.value = [];
     }
   } catch (err) {
@@ -106,8 +119,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.font-bold { font-weight: 700; }
+.text-3xl { font-size: 1.875rem; }
 
-.font-bold { font-weight: 700; } /* Tailwind default */
-.text-3xl { font-size: 1.875rem; } /* Tailwind default */
-
+@media (max-width: 768px) {
+  .text-3xl { font-size: 1.5rem; }
+}
 </style>

@@ -90,10 +90,16 @@ import {
   faRightFromBracket,
   faAngleLeft,
   faAngleRight,
-  faCalendarCheck
-
-
-
+  faCalendarCheck,
+  faHand,
+  faExclamationCircle,
+  faListCheck,
+  faAnglesLeft,
+  faAnglesRight,
+  faSpinner,
+  faTruckMoving,
+  faChartBar
+   
 
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -195,7 +201,16 @@ library.add(
   faRightFromBracket,
   faAngleLeft,
   faAngleRight,
-  faCalendarCheck
+  faCalendarCheck,
+  faHand,
+  faExclamationCircle,
+  faListCheck,
+  faAnglesLeft,
+  faAnglesRight,
+  faSpinner,
+  faTruckMoving,
+  faChartBar
+   
 );
 
 // Register GSAP plugins

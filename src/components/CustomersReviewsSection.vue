@@ -118,13 +118,12 @@
           Join <span class="text-pure-gold font-semibold">800+</span> satisfied
           customers across Agulu.
         </p>
-        <router-link to="/register">
-          <button
-            class="bg-pure-gold text-navy-blue py-3 px-10 rounded-md font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer"
-          >
-            Experience CHUVI Care
-          </button>
-        </router-link>
+     
+        <base-button 
+         class="bg-pure-gold text-navy-blue py-3 px-10 rounded-md font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer"
+        >
+       Experience CHUVI Care
+      </base-button>
       </div>
     </div>
   </section>
@@ -133,6 +132,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
+import BaseButton from "@/components/atoms/BaseButton.vue";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";

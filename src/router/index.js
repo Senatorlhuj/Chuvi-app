@@ -8,6 +8,8 @@ import CouponManager from '@/views/admin/CouponManager.vue';
 import ManageOrders from '@/views/admin/ManageOrders.vue';
 import AdminReviewsManager from '@/views/admin/AdminReviewsManager.vue';
 import AdminIssues from '@/views/admin/AdminIssues.vue';
+import ManageServices from '@/views/admin/ManageServices.vue';
+import ManagePlans from '@/views/admin/ManagePlans.vue';
 
 import EmployeeLogin from "@/views/employee/auth/EmployeeLogin.vue";
 import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
@@ -30,6 +32,7 @@ import TrackOrder from '@/views/user/TrackOrder.vue';
 import BookPickup from '@/views/user/BookPickup.vue';
 import OrderItemSelector from '@/views/user/OrderItemSelector.vue';
 
+
 import UserLogin from '@/views/user/auth/userLogin.vue';
 import UserRegister from '@/views/user/auth/userRegister.vue';
 import ResendCode from '@/views/user/auth/resendCode.vue';
@@ -41,6 +44,7 @@ import HelpCenter from '@/views/user/sections/HelpCenter.vue';
 import UserReferral from '@/views/user/sections/UserReferral.vue';
 import UserSubscription from '@/views/user/sections/UserSubscription.vue';
 import MyBookings from '@/views/user/sections/MyBookings.vue';
+import PlansPage from '@/views/user/sections/PlansPage.vue';
 import UserNotifications from '@/views/user/sections/UserNotifications.vue';
 
 const routes = [
@@ -77,6 +81,7 @@ const routes = [
       { path: 'subscriptions', name: 'UserSubscription', component: UserSubscription },
       { path: 'order-history', name: 'orderHistory', component: MyBookings },
       { path: 'my-referrals', name: 'UserReferral', component: UserReferral },
+      { path: 'subscription-plans', name: 'PlansPage', component: PlansPage },
       { path: 'notification', name: 'UserNotifications', component: UserNotifications },
     ],
   },
@@ -92,6 +97,8 @@ const routes = [
       { path: 'orders/manage-orders', redirect: { name: 'ManageOrders' } },
       { path: 'reviews/all-reviews', redirect: { name: 'StaffReviewsManager' } },
       { path: 'issues/all-issues', redirect: { name: 'StaffIssues' } },
+      { path: 'all-services',  name: 'ManageServices', component:ManageServices },
+      { path: 'all-plans',  name: 'ManagePlans', component:ManagePlans },
     ],
   },
   {
