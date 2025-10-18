@@ -418,7 +418,7 @@ import FlatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { useOrderItems } from "@/composables/useOrderItems";
 import { fetchUserProfile } from "@/services/api";
-import CustomSelect from "@/components/atoms/customSelect.vue";
+import CustomSelect from "@/components/atoms/CustomSelect.vue";
 
 const router = useRouter();
 const { orderPayload, totalItemCount, estimatedSubtotal } = useOrderItems();
