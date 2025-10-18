@@ -10,6 +10,7 @@ import AdminReviewsManager from '@/views/admin/AdminReviewsManager.vue';
 import AdminIssues from '@/views/admin/AdminIssues.vue';
 import ManageServices from '@/views/admin/ManageServices.vue';
 import ManagePlans from '@/views/admin/ManagePlans.vue';
+import AdminManageNotifications from '@/views/admin/AdminManageNotifications.vue';
 
 import EmployeeLogin from "@/views/employee/auth/EmployeeLogin.vue";
 import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
@@ -99,6 +100,7 @@ const routes = [
       { path: 'issues/all-issues', redirect: { name: 'StaffIssues' } },
       { path: 'all-services',  name: 'ManageServices', component:ManageServices },
       { path: 'all-plans',  name: 'ManagePlans', component:ManagePlans },
+      { path: 'admin-notifications',  name: 'AdminManageNotifications', component:AdminManageNotifications },
     ],
   },
   {

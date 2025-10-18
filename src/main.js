@@ -98,8 +98,12 @@ import {
   faAnglesRight,
   faSpinner,
   faTruckMoving,
-  faChartBar
-   
+  faChartBar,
+  faReceipt,
+  faCheckDouble,
+  faRotate,      // 👈 NEW: Used for 'status' type
+  faCircleInfo
+
 
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -209,8 +213,12 @@ library.add(
   faAnglesRight,
   faSpinner,
   faTruckMoving,
-  faChartBar
-   
+  faChartBar,
+  faReceipt,
+  faCheckDouble,
+  faRotate,      // 👈 NEW: Used for 'status' type
+  faCircleInfo
+
 );
 
 // Register GSAP plugins

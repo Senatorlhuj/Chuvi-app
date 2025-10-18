@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-md p-8 rounded-2xl shadow-lg bg-white">
+    <div class="w-full max-w-md p-8 rounded-2xl  bg-white">
       <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-block bg-navy-blue rounded-full p-3">
@@ -48,7 +48,7 @@
       <button
         @click="handleVerify"
         :disabled="loading"
-        class="w-full bg-navy-blue text-bone-white py-3 rounded-md font-semibold text-lg hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+        class="w-full bg-navy-blue text-bone-white py-3 rounded-md font-semibold text-lg hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed "
       >
         {{ loading ? "Verifying..." : "Verify Phone" }}
       </button>

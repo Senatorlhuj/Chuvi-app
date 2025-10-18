@@ -1,13 +1,11 @@
 <template>
   <div>
-    <!-- Desktop Sidebar -->
     <aside
       :class="[
         'hidden md:flex flex-col bg-charcoal text-bone-white transition-all duration-300 ease-in-out fixed md:relative inset-y-0 left-0 z-20 h-full border-r border-golden-brown/30',
         isCollapsed ? 'w-20' : 'w-64',
       ]"
     >
-      <!-- Header with Logo + Toggle Button -->
       <div class="p-4 border-b border-golden-brown/30 flex items-center justify-between flex-shrink-0">
         <router-link
           :to="{ name: 'Home' }"
@@ -19,7 +17,7 @@
               v-show="!isCollapsed"
               src="@/assets/images/logo/chuvi-logo.png"
               alt="Brand Logo"
-              class="h-10 w-auto"
+              class="h-10 w-auto filter brightness-0 invert"
             />
           </transition>
           <font-awesome-icon
@@ -29,7 +27,6 @@
           />
         </router-link>
 
-        <!-- Collapse Button -->
         <button
           v-if="!isCollapsed"
           class="text-bone-white/60 hover:text-pure-gold focus:outline-none transition p-2 rounded hover:bg-golden-brown/20 flex-shrink-0 cursor-pointer"
@@ -41,7 +38,6 @@
         </button>
       </div>
 
-      <!-- Expand Button (when collapsed) -->
       <div v-if="isCollapsed" class="flex justify-center p-3 border-b border-golden-brown/30">
         <button
           class="text-bone-white/60 hover:text-pure-gold focus:outline-none transition p-2 rounded hover:bg-golden-brown/20 cursor-pointer"
@@ -53,7 +49,6 @@
         </button>
       </div>
 
-      <!-- Navigation Links -->
       <nav class="flex-1 overflow-y-auto overflow-x-hidden">
         <div :class="isCollapsed ? 'p-2 space-y-1' : 'p-4 space-y-2'">
           <router-link
@@ -68,13 +63,11 @@
               isCollapsed ? 'justify-center' : '',
             ]"
           >
-            <!-- Icon -->
             <font-awesome-icon
               :icon="item.icon"
               :class="['flex-shrink-0', isCollapsed ? 'text-lg' : 'text-base']"
             />
 
-            <!-- Text (Hidden when collapsed) -->
             <span
               v-if="!isCollapsed"
               class="text-sm font-medium truncate whitespace-nowrap"
@@ -82,7 +75,6 @@
               {{ item.name }}
             </span>
 
-            <!-- Tooltip (Show on hover when collapsed) -->
             <div
               v-if="isCollapsed"
               class="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-golden-brown text-navy-blue text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg"
@@ -91,7 +83,6 @@
             </div>
           </router-link>
 
-          <!-- Services Section -->
           <div v-if="!isCollapsed" class="pt-6 mt-6 border-t border-golden-brown/30">
             <h3 class="text-cream text-xs font-bold uppercase mb-3 tracking-wider px-3">
               Services
@@ -110,13 +101,11 @@
               isCollapsed ? 'justify-center' : '',
             ]"
           >
-            <!-- Icon -->
             <font-awesome-icon
               icon="calendar-plus"
               :class="['flex-shrink-0', isCollapsed ? 'text-lg' : 'text-base']"
             />
 
-            <!-- Text (Hidden when collapsed) -->
             <span
               v-if="!isCollapsed"
               class="text-sm font-medium truncate whitespace-nowrap"
@@ -124,7 +113,6 @@
               Book Service
             </span>
 
-            <!-- Tooltip (Show on hover when collapsed) -->
             <div
               v-if="isCollapsed"
               class="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-golden-brown text-navy-blue text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg"
@@ -134,8 +122,47 @@
           </router-link>
         </div>
       </nav>
+      
+      <div :class="isCollapsed ? 'p-2' : 'p-3'">
+        <router-link
+          :to="{ name: 'UserNotifications' }"
+          class="relative group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out w-full"
+          :class="[
+            isActive('UserNotifications')
+              ? 'bg-golden-brown/30 text-pure-gold'
+              : 'text-bone-white/70 hover:text-pure-gold hover:bg-golden-brown/20',
+            isCollapsed ? 'justify-center' : '',
+          ]"
+          aria-label="Notifications"
+        >
+          <font-awesome-icon
+            icon="bell"
+            :class="['flex-shrink-0', isCollapsed ? 'text-lg' : 'text-base']"
+          />
+          <span
+            v-if="unreadCount > 0"
+            class="absolute top-2 right-2 flex items-center justify-center h-4 w-4 text-[10px] font-bold text-white bg-red-500 rounded-full"
+            :class="isCollapsed ? 'right-auto left-1/2 -translate-x-1/2 top-1' : ''"
+          >
+            {{ unreadCount }}
+          </span>
 
-      <!-- Logout -->
+          <span
+            v-if="!isCollapsed"
+            class="text-sm font-medium truncate whitespace-nowrap"
+          >
+            Notifications
+          </span>
+
+          <div
+            v-if="isCollapsed"
+            class="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-golden-brown text-navy-blue text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg"
+          >
+            Notifications
+          </div>
+        </router-link>
+      </div>
+
       <div class="p-3 border-t border-golden-brown/30 flex-shrink-0">
         <button
           @click="handleLogout"
@@ -153,7 +180,6 @@
             Logout
           </span>
 
-          <!-- Tooltip (Show on hover when collapsed) -->
           <div
             v-if="isCollapsed"
             class="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-2 bg-bone-white text-charcoal text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 shadow-lg"
@@ -164,7 +190,6 @@
       </div>
     </aside>
 
-    <!-- Mobile Overlay -->
     <transition name="overlay">
       <div
         v-if="isOpen"
@@ -173,14 +198,12 @@
       ></div>
     </transition>
 
-    <!-- Mobile Sidebar -->
     <div
       :class="[
         'fixed inset-y-0 left-0 w-64 bg-navy-blue text-bone-white z-40 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col',
         isOpen ? 'translate-x-0' : '-translate-x-full',
       ]"
     >
-      <!-- Mobile Header -->
       <div class="p-4 border-b border-golden-brown/30 flex items-center justify-between flex-shrink-0">
         <router-link
           :to="{ name: 'Home' }"
@@ -200,7 +223,6 @@
         </button>
       </div>
 
-      <!-- Mobile Navigation -->
       <nav class="flex-1 overflow-y-auto overflow-x-hidden">
         <div class="p-4 space-y-2">
           <router-link
@@ -220,8 +242,30 @@
               {{ item.name }}
             </span>
           </router-link>
+          
+          <router-link
+            :to="{ name: 'UserNotifications' }"
+            @click="$emit('closeSidebar')"
+            class="relative flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ease-in-out"
+            :class="[
+              isActive('UserNotifications')
+                ? 'bg-golden-brown/30 text-pure-gold'
+                : 'text-bone-white/70 hover:text-pure-gold hover:bg-golden-brown/20',
+            ]"
+            aria-label="Notifications"
+          >
+            <font-awesome-icon icon="bell" class="flex-shrink-0 text-base" />
+            <span class="text-sm font-medium truncate whitespace-nowrap">
+              Notifications
+            </span>
+            <span
+              v-if="unreadCount > 0"
+              class="absolute right-4 flex items-center justify-center h-5 w-5 text-[10px] font-bold text-white bg-red-500 rounded-full"
+            >
+              {{ unreadCount }}
+            </span>
+          </router-link>
 
-          <!-- Mobile Services Section -->
           <div class="pt-6 mt-6 border-t border-golden-brown/30">
             <h3 class="text-cream text-xs font-bold uppercase mb-3 tracking-wider px-3">
               Services
@@ -246,7 +290,6 @@
         </div>
       </nav>
 
-      <!-- Mobile Logout -->
       <div class="p-3 border-t border-golden-brown/30 flex-shrink-0">
         <button
           @click="handleLogout"
@@ -266,6 +309,8 @@
 import { defineProps, defineEmits, ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '@/composables/useToast';
+// Assuming you have a composable for notifications
+import { useNotifications } from '@/composables/useNotifications'; 
 
 defineProps({
   isOpen: {
@@ -280,6 +325,9 @@ const route = useRoute();
 const { showSuccess } = useToast();
 
 const isCollapsed = ref(false);
+
+// 🔔 Notification Logic Dropped Here
+const { unreadCount, fetchNotifications } = useNotifications();
 
 const navItems = [
   { name: 'My Profile', routeName: 'UserProfile', icon: 'user' },
@@ -303,6 +351,10 @@ onMounted(() => {
   if (saved !== null) {
     isCollapsed.value = JSON.parse(saved);
   }
+  
+  // 🔔 Start fetching notifications on mount and every minute
+  fetchNotifications();
+  setInterval(fetchNotifications, 60000); 
 });
 
 watch(isCollapsed, (newVal) => {
@@ -334,5 +386,4 @@ const toggleCollapse = () => {
 .overlay-leave-to {
   opacity: 0;
 }
-
 </style>

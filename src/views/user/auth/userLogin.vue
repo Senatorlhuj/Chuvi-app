@@ -100,7 +100,7 @@ const handleLogin = async () => {
       showToast("Welcome back! You are now logged in.", "success");
 
       localStorage.setItem("userToken", response.token);
-      router.push({ name: "BookPickup" });
+      router.push({ name: "UserProfile" });
     } else {
       showToast(
         response.message || "Login failed. Check your phone number and password.",

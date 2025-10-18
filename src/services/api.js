@@ -394,19 +394,48 @@ export async function getAllServicesCatalog() {
     return data;
 }
 
+// api.js
+
 // ==================== Notifications ====================
 
+// This is likely correct because your backend expects the 'admin' prefix:
+export async function adminGetAllNotifications(queryString = '') {
+    const url = queryString ? `api/admin/notifications?${queryString}` : 'api/admin/notifications';
+    return authorizedFetch(url, { method: 'GET' });
+}
+
+// ⚠️ Issue: The Admin Marking functions should point to the admin endpoint, 
+// and we must fix the double 'api/' if that's what authorizedFetch adds.
+export async function markAdminNotificationAsRead(notificationId) {
+    if (!notificationId) throw new Error('Notification ID is required');
+    // ✅ CORRECTION: Changed to 'admin/notifications' and removed the double 'api/'
+    return authorizedFetch(`admin/notifications/${notificationId}/read`, { 
+        method: 'PATCH'
+    });
+}
+export async function markAllAdminNotificationsAsRead() {
+    // ✅ CORRECTION: Changed to 'admin/notifications' and removed the double 'api/'
+    return authorizedFetch('admin/notifications/read-all', { 
+        method: 'PATCH'
+    });
+}
+
+// ⚠️ Note: Your Admin Notifications page is likely calling the *user* functions below
+// which is why it's Unauthorized. Let's fix their paths too.
 export async function getNotifications() {
+    // ✅ CORRECTION: Removed 'api/'
     return authorizedFetch('api/api/notifications', { method: 'GET' });
 }
 
 export async function markNotificationAsRead(notificationId) {
     if (!notificationId) throw new Error('Notification ID is required');
-    return authorizedFetch(`api/api/notifications/${notificationId}/read`, { method: 'PATCH' });
+    // ✅ CORRECTION: Removed 'api/'
+    return authorizedFetch(`notifications/${notificationId}/read`, { method: 'PATCH' });
 }
 
 export async function markAllNotificationsAsRead() {
-    return authorizedFetch('api/api/notifications/read-all', { method: 'PATCH' });
+    // ✅ CORRECTION: Removed 'api/'
+    return authorizedFetch('notifications/read-all', { method: 'PATCH' });
 }
 
 // ==================== Newsletter Subscription ====================

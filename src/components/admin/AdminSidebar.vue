@@ -88,6 +88,12 @@
             :to="{ name: 'ManagePlans' }"
             :collapsed="isCollapsed"
           />
+          <SidebarLink
+            icon="fa-solid fa-bell"
+            name="Manage Notifications"
+            :to="{ name: 'AdminManageNotifications' }"
+            :collapsed="isCollapsed"
+          />
 
           <!-- System Section -->
           <div v-if="!isCollapsed" class="pt-4 pb-2 px-2">
@@ -193,6 +199,12 @@
             icon="fa-solid fa-crown"
             name="Manage Plans"
             :to="{ name: 'ManagePlans' }"
+            @click="$emit('closeSidebar')"
+          />
+          <SidebarLink
+            icon="fa-solid fa-bell"
+            name="Manage Notifications"
+            :to="{ name: 'AdminManageNotifications' }"
             @click="$emit('closeSidebar')"
           />
 
