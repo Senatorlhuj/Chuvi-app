@@ -143,7 +143,7 @@ export function useOrderItems() {
                 (s) => s.code === item.serviceCode
             );
 
-            if (serviceGroup && serviceGroup.tiers[newTier]) {
+            if (serviceGroup?.tiers[newTier]) {
                 // Update base item price only
                 item.price = serviceGroup.tiers[newTier].pricePerItem;
                 item.serviceTier = newTier;

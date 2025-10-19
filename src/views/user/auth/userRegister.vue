@@ -152,7 +152,7 @@ const handleRegistration = async () => {
   try {
     const response = await register(payload);
 
-    if (response && response.message) {
+    if (response?.message) {
       showToast(
         `Registration successful for ${payload.fullName}! Please verify your phone number.`,
         "success"

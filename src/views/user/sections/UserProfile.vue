@@ -940,7 +940,7 @@ watch(
   profile,
   (newProfile) => {
     
-    if (newProfile && newProfile.photoUrl) {
+    if (newProfile?.photoUrl) {
       newProfile.photoUrl =
         newProfile.photoUrl.split("?")[0] + `?t=${Date.now()}`;
     }

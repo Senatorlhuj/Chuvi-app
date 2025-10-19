@@ -274,7 +274,7 @@ const handleCreateEmployee = async () => {
   try {
     const response = await createEmployee(employeeData.value);
     
-    if (response && response.user && response.user._id && response.user.fullName) {
+    if (response?.user && response.user._id && response.user.fullName) {
       
       const newEmployee = {
         ...response.user,

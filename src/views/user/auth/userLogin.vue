@@ -96,7 +96,7 @@ const handleLogin = async () => {
   try {
     const response = await login(credentials.value);
 
-    if (response && response.token) {
+    if (response?.token) {
       showToast("Welcome back! You are now logged in.", "success");
 
       localStorage.setItem("userToken", response.token);

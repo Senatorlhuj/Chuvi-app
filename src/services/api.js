@@ -50,7 +50,7 @@ async function authorizedFetch(endpoint, options = {}) {
     }
 
     const contentType = response.headers.get("content-type");
-    return contentType && contentType.includes("application/json")
+    return contentType?.includes("application/json")
         ? response.json()
         : null;
 }
@@ -159,7 +159,7 @@ export async function updateProfilePhoto(photoFormData) { // Accepts FormData ob
     }
 
     const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    if (contentType?.includes("application/json")) {
         return response.json();
     }
     return null;
@@ -273,7 +273,7 @@ export async function createOrder(orderFormData) { // Accepts FormData object
     }
 
     const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    if (contentType?.includes("application/json")) {
         return response.json();
     }
     return null;
@@ -337,7 +337,7 @@ export async function getOrderReceipt(orderId) {
     if (!response.ok) {
 
         const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
+        if (contentType?.includes("application/json")) {
             const errorBody = await response.json().catch(() => ({ message: 'Server error' }));
             throw new Error(errorBody.message || `HTTP error! Status: ${response.status}`);
         }
