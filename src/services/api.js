@@ -173,13 +173,13 @@ export async function updatePreferences(preferencesData) {
 
 // --- FIXED MEMBERSHIP ---
 export async function joinMembership() {
-    return authorizedFetch(`api/users/membership/join`, {
+    return authorizedFetch("api/users/membership/join", {
         method: 'POST', // was PUT, backend expects POST
     });
 }
 
 export async function leaveMembership() {
-    return authorizedFetch(`api/users/membership/leave`, {
+    return authorizedFetch("api/users/membership/leave", {
         method: 'POST',
     });
 }

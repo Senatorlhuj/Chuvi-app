@@ -191,7 +191,7 @@ const handleCopyPassword = async (textToCopy) => {
   }
   try {
     await navigator.clipboard.writeText(textToCopy);
-    showSuccess(`Copied password to clipboard!`);
+    showSuccess("Copied password to clipboard!");
   } catch (err) {
     console.error("Failed to copy text: ", err);
     showError("Failed to copy password. Check browser permissions.");
