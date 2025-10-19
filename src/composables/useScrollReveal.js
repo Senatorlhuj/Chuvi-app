@@ -37,7 +37,7 @@ export function useScrollReveal(targetRef, yOffset = 50, startPosition = "top 85
     }
   });
   onUnmounted(() => {
-    if (animationTimeline && animationTimeline.scrollTrigger) {
+    if (animationTimeline?.scrollTrigger) {
       animationTimeline.scrollTrigger.kill();
     }
   });

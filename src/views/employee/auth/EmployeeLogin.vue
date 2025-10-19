@@ -78,7 +78,7 @@ const handleLogin = async () => {
     const response = await employeeLogin(credentials.value);
     console.log("Login response:", response);
 
-    if (response && response.success && response.token) {
+    if (response?.success && response.token) {
       // ✅ Save session
       localStorage.setItem("employeeToken", response.token);
       localStorage.setItem("employeeData", JSON.stringify(response.user));

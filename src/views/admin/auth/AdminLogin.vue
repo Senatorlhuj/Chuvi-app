@@ -72,7 +72,7 @@ const handleLogin = async () => {
   try {
     const response = await adminLogin(credentials.value);
     
-    if (response && response.token) {
+    if (response?.token) {
       // 1. Save the token to localStorage
       localStorage.setItem('adminToken', response.token);
       

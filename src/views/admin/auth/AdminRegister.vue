@@ -106,7 +106,7 @@ const handleRegister = async () => {
   try {
     const response = await adminRegister(userData.value);
 
-    if (response && response.token) {
+    if (response?.token) {
       success.value = true;
 
       // 🚨 FIX: REMOVE the line that stores the token:

@@ -79,7 +79,7 @@ const handleResendCode = async () => {
     // API Call to resend the code
     const response = await resendCode(phoneData.value);
 
-    if (response && response.success) {
+    if (response?.success) {
       showSuccess(`A new verification code has been sent to **${phoneData.value.phone}**.`);
 
       // Navigate to the verification page, passing the phone number
