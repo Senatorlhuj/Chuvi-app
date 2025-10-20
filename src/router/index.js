@@ -1,135 +1,364 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
-import AdminLogin from '@/views/admin/auth/AdminLogin.vue';
-import AdminRegister from '@/views/admin/auth/AdminRegister.vue';
-import AdminDashboard from '@/views/admin/AdminDashboard.vue';
-import EmployeeCreate from '@/views/admin/EmployeeCreate.vue';
-import CouponManager from '@/views/admin/CouponManager.vue';
-import ManageOrders from '@/views/admin/ManageOrders.vue';
-import AdminReviewsManager from '@/views/admin/AdminReviewsManager.vue';
-import AdminIssues from '@/views/admin/AdminIssues.vue';
-import ManageServices from '@/views/admin/ManageServices.vue';
-import ManagePlans from '@/views/admin/ManagePlans.vue';
-import AdminManageNotifications from '@/views/admin/AdminManageNotifications.vue';
-
-import EmployeeLogin from "@/views/employee/auth/EmployeeLogin.vue";
-import EmployeeDashboard from '@/views/employee/EmployeeDashboard.vue';
-
-import PublicLayout from '@/layouts/PublicLayout.vue';
-import UserDashboardLayout from '@/layouts/UserLayout.vue';
-import AdminLayout from '@/layouts/AdminLayout.vue';
-import EmployeeLayout from '@/layouts/EmployeeLayout.vue';
-import StaffLayout from '@/layouts/StaffLayout.vue';
-
-import HomePage from '@/views/publicPages/HomePage.vue';
-import ServicesPage from "@/views/publicPages/ServicesPage.vue";
-import CareCompensation from "@/views/publicPages/CareCompensation.vue";
-import TermsPrivacy from "@/views/publicPages/TermsPrivacy.vue";
-import ContactPage from "@/views/publicPages/ContactPage.vue";
-
-
-import OrderSuccess from '@/views/user/OrderSuccess.vue';
-import TrackOrder from '@/views/user/TrackOrder.vue';
-import BookPickup from '@/views/user/BookPickup.vue';
-import OrderItemSelector from '@/views/user/OrderItemSelector.vue';
-
-
-import UserLogin from '@/views/user/auth/userLogin.vue';
-import UserRegister from '@/views/user/auth/userRegister.vue';
-import ResendCode from '@/views/user/auth/resendCode.vue';
-import ResetPassword from '@/views/user/auth/resetPassword.vue';
-import VerifyPhone from '@/views/user/auth/verifyPhone.vue';
-
-import UserProfile from '@/views/user/sections/UserProfile.vue';
-import HelpCenter from '@/views/user/sections/HelpCenter.vue';
-import UserReferral from '@/views/user/sections/UserReferral.vue';
-import UserSubscription from '@/views/user/sections/UserSubscription.vue';
-import MyBookings from '@/views/user/sections/MyBookings.vue';
-import PlansPage from '@/views/user/sections/PlansPage.vue';
-import UserNotifications from '@/views/user/sections/UserNotifications.vue';
+// Layouts (keep these since they're likely small and used everywhere)
+import PublicLayout from "@/layouts/PublicLayout.vue";
+import UserDashboardLayout from "@/layouts/UserLayout.vue";
+import AdminLayout from "@/layouts/AdminLayout.vue";
+import EmployeeLayout from "@/layouts/EmployeeLayout.vue";
+import StaffLayout from "@/layouts/StaffLayout.vue";
 
 const routes = [
   {
-    path: '/',
+    path: "/",
     component: PublicLayout,
     children: [
-      { path: '', name: 'Home', component: HomePage },
-      { path: '/contact', name: 'Contact', component: ContactPage },
-      { path: '/services', name: 'Our-services', component: ServicesPage },
-      { path: '/care-compensation', name: 'CareCompensation', component: CareCompensation },
-      { path: '/terms-privacy', name: 'TermsPrivacy', component: TermsPrivacy },
+      {
+        path: "",
+        name: "Home",
+        component: () =>
+          import(
+            /* webpackChunkName: "public" */ "@/views/publicPages/HomePage.vue"
+          ),
+      },
+      {
+        path: "/contact",
+        name: "Contact",
+        component: () =>
+          import(
+            /* webpackChunkName: "public" */ "@/views/publicPages/ContactPage.vue"
+          ),
+      },
+      {
+        path: "/services",
+        name: "Our-services",
+        component: () =>
+          import(
+            /* webpackChunkName: "public" */ "@/views/publicPages/ServicesPage.vue"
+          ),
+      },
+      {
+        path: "/care-compensation",
+        name: "CareCompensation",
+        component: () =>
+          import(
+            /* webpackChunkName: "public" */ "@/views/publicPages/CareCompensation.vue"
+          ),
+      },
+      {
+        path: "/terms-privacy",
+        name: "TermsPrivacy",
+        component: () =>
+          import(
+            /* webpackChunkName: "public" */ "@/views/publicPages/TermsPrivacy.vue"
+          ),
+      },
     ],
   },
   {
-    path: '/user',
+    path: "/user",
     component: UserDashboardLayout,
     meta: { requiresAuth: true },
     children: [
       {
-        path: '/order-success/:orderId',
-        name: 'OrderSuccess',
-        component: OrderSuccess,
+        path: "/order-success/:orderId",
+        name: "OrderSuccess",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-orders" */ "@/views/user/OrderSuccess.vue"
+          ),
         props: true,
       },
-      { path: 'orders/:id/track', name: 'TrackOrder', component: TrackOrder, props: true },
-
-      { path: 'book-pick-up', name: 'BookPickup', component: BookPickup },
-      { path: '/order/select-items', name: 'ItemSelection', component: OrderItemSelector },
-      { path: '/order/pickup-delivery', name: 'PickupDelivery', component: () => import('@/views/user/PickupDeliveryView.vue') },
-      { path: '/summary', name: 'OrderSummary', component: () => import('@/views/user/OrderSummary.vue') },
-      { path: 'profile', name: 'UserProfile', component: UserProfile },
-      { path: 'help-center', name: 'HelpCenter', component: HelpCenter },
-      { path: 'subscriptions', name: 'UserSubscription', component: UserSubscription },
-      { path: 'order-history', name: 'orderHistory', component: MyBookings },
-      { path: 'my-referrals', name: 'UserReferral', component: UserReferral },
-      { path: 'subscription-plans', name: 'PlansPage', component: PlansPage },
-      { path: 'notification', name: 'UserNotifications', component: UserNotifications },
+      {
+        path: "orders/:id/track",
+        name: "TrackOrder",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-orders" */ "@/views/user/TrackOrder.vue"
+          ),
+        props: true,
+      },
+      {
+        path: "book-pick-up",
+        name: "BookPickup",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-booking" */ "@/views/user/BookPickup.vue"
+          ),
+      },
+      {
+        path: "/order/select-items",
+        name: "ItemSelection",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-booking" */ "@/views/user/OrderItemSelector.vue"
+          ),
+      },
+      {
+        path: "/order/pickup-delivery",
+        name: "PickupDelivery",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-booking" */ "@/views/user/PickupDeliveryView.vue"
+          ),
+      },
+      {
+        path: "/summary",
+        name: "OrderSummary",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-booking" */ "@/views/user/OrderSummary.vue"
+          ),
+      },
+      {
+        path: "profile",
+        name: "UserProfile",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-profile" */ "@/views/user/sections/UserProfile.vue"
+          ),
+      },
+      {
+        path: "help-center",
+        name: "HelpCenter",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-support" */ "@/views/user/sections/HelpCenter.vue"
+          ),
+      },
+      {
+        path: "subscriptions",
+        name: "UserSubscription",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-subscription" */ "@/views/user/sections/UserSubscription.vue"
+          ),
+      },
+      {
+        path: "order-history",
+        name: "orderHistory",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-orders" */ "@/views/user/sections/MyBookings.vue"
+          ),
+      },
+      {
+        path: "my-referrals",
+        name: "UserReferral",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-profile" */ "@/views/user/sections/UserReferral.vue"
+          ),
+      },
+      {
+        path: "subscription-plans",
+        name: "PlansPage",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-subscription" */ "@/views/user/sections/PlansPage.vue"
+          ),
+      },
+      {
+        path: "notification",
+        name: "UserNotifications",
+        component: () =>
+          import(
+            /* webpackChunkName: "user-profile" */ "@/views/user/sections/UserNotifications.vue"
+          ),
+      },
     ],
   },
   {
-    path: '/admin',
+    path: "/admin",
     component: AdminLayout,
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
-      { path: 'dashboard', name: 'AdminDashboard', component: AdminDashboard },
-      { path: 'employees/create', name: 'AdminEmployeeCreate', component: EmployeeCreate },
-      { path: 'coupons', name: 'AdminCouponManager', component: CouponManager },
-      { path: 'services/config', name: 'AdminServiceConfig', component: () => import('@/views/admin/ServiceConfig.vue') },
-      { path: 'orders/manage-orders', redirect: { name: 'ManageOrders' } },
-      { path: 'reviews/all-reviews', redirect: { name: 'StaffReviewsManager' } },
-      { path: 'issues/all-issues', redirect: { name: 'StaffIssues' } },
-      { path: 'all-services',  name: 'ManageServices', component:ManageServices },
-      { path: 'all-plans',  name: 'ManagePlans', component:ManagePlans },
-      { path: 'admin-notifications',  name: 'AdminManageNotifications', component:AdminManageNotifications },
+      {
+        path: "dashboard",
+        name: "AdminDashboard",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-core" */ "@/views/admin/AdminDashboard.vue"
+          ),
+      },
+      {
+        path: "employees/create",
+        name: "AdminEmployeeCreate",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-employees" */ "@/views/admin/EmployeeCreate.vue"
+          ),
+      },
+      {
+        path: "coupons",
+        name: "AdminCouponManager",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-management" */ "@/views/admin/CouponManager.vue"
+          ),
+      },
+      {
+        path: "services/config",
+        name: "AdminServiceConfig",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-management" */ "@/views/admin/ServiceConfig.vue"
+          ),
+      },
+      {
+        path: "orders/manage-orders",
+        redirect: { name: "ManageOrders" },
+      },
+      {
+        path: "reviews/all-reviews",
+        redirect: { name: "StaffReviewsManager" },
+      },
+      {
+        path: "issues/all-issues",
+        redirect: { name: "StaffIssues" },
+      },
+      {
+        path: "all-services",
+        name: "ManageServices",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-management" */ "@/views/admin/ManageServices.vue"
+          ),
+      },
+      {
+        path: "all-plans",
+        name: "ManagePlans",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-management" */ "@/views/admin/ManagePlans.vue"
+          ),
+      },
+      {
+        path: "admin-notifications",
+        name: "AdminManageNotifications",
+        component: () =>
+          import(
+            /* webpackChunkName: "admin-core" */ "@/views/admin/AdminManageNotifications.vue"
+          ),
+      },
     ],
   },
   {
-    path: '/staff',
+    path: "/staff",
     component: StaffLayout,
     meta: { requiresAuth: true, requiresStaff: true },
     children: [
-      { path: 'orders/manage-orders', name: 'ManageOrders', component: ManageOrders },
-      { path: 'reviews/manager', name: 'StaffReviewsManager', component: AdminReviewsManager },
-      { path: 'issues/manager', name: 'StaffIssues', component: AdminIssues },
+      {
+        path: "orders/manage-orders",
+        name: "ManageOrders",
+        component: () =>
+          import(
+            /* webpackChunkName: "staff" */ "@/views/admin/ManageOrders.vue"
+          ),
+      },
+      {
+        path: "reviews/manager",
+        name: "StaffReviewsManager",
+        component: () =>
+          import(
+            /* webpackChunkName: "staff" */ "@/views/admin/AdminReviewsManager.vue"
+          ),
+      },
+      {
+        path: "issues/manager",
+        name: "StaffIssues",
+        component: () =>
+          import(
+            /* webpackChunkName: "staff" */ "@/views/admin/AdminIssues.vue"
+          ),
+      },
     ],
   },
   {
-    path: '/employee',
+    path: "/employee",
     component: EmployeeLayout,
     meta: { requiresAuth: true, requiresEmployee: true },
     children: [
-      { path: 'dashboard', name: 'EmployeeDashboard', component: EmployeeDashboard },
+      {
+        path: "dashboard",
+        name: "EmployeeDashboard",
+        component: () =>
+          import(
+            /* webpackChunkName: "employee" */ "@/views/employee/EmployeeDashboard.vue"
+          ),
+      },
     ],
   },
-  { path: '/admin/login', name: 'AdminLogin', component: AdminLogin },
-  { path: '/admin/register', name: 'AdminRegister', component: AdminRegister },
-  { path: '/login', name: 'Login', component: UserLogin },
-  { path: '/register', name: 'Register', component: UserRegister },
-  { path: '/verify-phone', name: 'VerifyPhone', component: VerifyPhone },
-  { path: '/resend-verification-code', name: 'ResendVerificationCode', component: ResendCode },
-  { path: '/reset-password', name: 'ResetPassword', component: ResetPassword },
-  { path: '/employee/login', name: 'EmployeeLogin', component: EmployeeLogin },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue') },
+  // Auth routes - grouped by user type
+  {
+    path: "/admin/login",
+    name: "AdminLogin",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-admin" */ "@/views/admin/auth/AdminLogin.vue"
+      ),
+  },
+  {
+    path: "/admin/register",
+    name: "AdminRegister",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-admin" */ "@/views/admin/auth/AdminRegister.vue"
+      ),
+  },
+  {
+    path: "/login",
+    name: "Login",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-user" */ "@/views/user/auth/userLogin.vue"
+      ),
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-user" */ "@/views/user/auth/userRegister.vue"
+      ),
+  },
+  {
+    path: "/verify-phone",
+    name: "VerifyPhone",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-user" */ "@/views/user/auth/verifyPhone.vue"
+      ),
+  },
+  {
+    path: "/resend-verification-code",
+    name: "ResendVerificationCode",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-user" */ "@/views/user/auth/resendCode.vue"
+      ),
+  },
+  {
+    path: "/reset-password",
+    name: "ResetPassword",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-user" */ "@/views/user/auth/resetPassword.vue"
+      ),
+  },
+  {
+    path: "/employee/login",
+    name: "EmployeeLogin",
+    component: () =>
+      import(
+        /* webpackChunkName: "auth-employee" */ "@/views/employee/auth/EmployeeLogin.vue"
+      ),
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () =>
+      import(/* webpackChunkName: "misc" */ "@/views/NotFound.vue"),
+  },
 ];
 
 const router = createRouter({
@@ -155,38 +384,54 @@ const router = createRouter({
   },
 });
 
+// Optional: Add route-based preloading for better UX
 router.beforeEach((to, from, next) => {
-  const userLoggedIn = !!localStorage.getItem('userToken');
-  const adminLoggedIn = !!localStorage.getItem('adminToken');
-  const employeeLoggedIn = !!localStorage.getItem('employeeToken');
+  // Preload likely next routes based on current route
+  if (to.meta.preload) {
+    to.meta.preload.forEach((routeName) => {
+      // This would trigger the chunk download in background
+      const route = router.resolve({ name: routeName });
+    });
+  }
 
-  const requiresAuth = to.matched.some(r => r.meta.requiresAuth);
-  const requiresAdmin = to.matched.some(r => r.meta.requiresAdmin);
-  const requiresStaff = to.matched.some(r => r.meta.requiresStaff);
+  // Your existing auth logic
+  const userLoggedIn = !!localStorage.getItem("userToken");
+  const adminLoggedIn = !!localStorage.getItem("adminToken");
+  const employeeLoggedIn = !!localStorage.getItem("employeeToken");
+
+  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth);
+  const requiresAdmin = to.matched.some((r) => r.meta.requiresAdmin);
+  const requiresStaff = to.matched.some((r) => r.meta.requiresStaff);
 
   if (requiresAuth && !userLoggedIn && !adminLoggedIn && !employeeLoggedIn) {
-    if (requiresAdmin) return next({ name: 'AdminLogin' });
-    if (requiresStaff) return next({ name: 'EmployeeLogin' });
-    return next({ name: 'Home' });
+    if (requiresAdmin) return next({ name: "AdminLogin" });
+    if (requiresStaff) return next({ name: "EmployeeLogin" });
+    return next({ name: "Home" });
   }
 
   if (requiresAdmin && !adminLoggedIn) {
     console.warn(`Unauthorized admin access attempt: ${to.path}`);
-    return next({ name: employeeLoggedIn ? 'EmployeeDashboard' : 'Login' });
+    return next({ name: employeeLoggedIn ? "EmployeeDashboard" : "Login" });
   }
 
   if (requiresStaff && !adminLoggedIn && !employeeLoggedIn) {
     console.warn(`Unauthorized staff access attempt: ${to.path}`);
-    return next({ name: 'EmployeeLogin' });
+    return next({ name: "EmployeeLogin" });
   }
 
   if (
     (userLoggedIn || adminLoggedIn || employeeLoggedIn) &&
-    ['Login', 'Register', 'AdminLogin', 'AdminRegister', 'EmployeeLogin'].includes(to.name)
+    [
+      "Login",
+      "Register",
+      "AdminLogin",
+      "AdminRegister",
+      "EmployeeLogin",
+    ].includes(to.name)
   ) {
-    if (adminLoggedIn) return next({ name: 'AdminDashboard' });
-    if (employeeLoggedIn) return next({ name: 'EmployeeDashboard' });
-    return next({ name: 'UserProfile' });
+    if (adminLoggedIn) return next({ name: "AdminDashboard" });
+    if (employeeLoggedIn) return next({ name: "EmployeeDashboard" });
+    return next({ name: "UserProfile" });
   }
 
   next();

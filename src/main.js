@@ -102,7 +102,9 @@ import {
   faReceipt,
   faCheckDouble,
   faRotate,      // 👈 NEW: Used for 'status' type
-  faCircleInfo
+  faCircleInfo,
+  faChevronLeft,
+  faChevronRight
 
 
 } from '@fortawesome/free-solid-svg-icons';
@@ -216,8 +218,10 @@ library.add(
   faChartBar,
   faReceipt,
   faCheckDouble,
-  faRotate,      // 👈 NEW: Used for 'status' type
-  faCircleInfo
+  faRotate,      
+  faCircleInfo,
+  faChevronLeft,
+  faChevronRight
 
 );
 

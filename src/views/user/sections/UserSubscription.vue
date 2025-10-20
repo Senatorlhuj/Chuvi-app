@@ -31,13 +31,13 @@ import {
   faArrowRight,
   faClock,
   faSpinner,
+ 
+  faExclamationTriangle,
+  faWifi  
 } from "@fortawesome/free-solid-svg-icons";
 
-// --- Hooks Instantiation FIX ---
 const route = useRoute();
 const router = useRouter();
-// ------------------------------
-
 const { showSuccess, showError } = useToast();
 const PlansPage = defineAsyncComponent(() =>
   import("@/views/user/sections/PlansPage.vue")
@@ -47,6 +47,8 @@ const PlansPage = defineAsyncComponent(() =>
 const subscription = ref(null);
 const isLoading = ref(true);
 const error = ref(null);
+const errorType = ref(null); // NEW: 'network', 'noSubscription', 'server', 'generic'
+const networkError = ref(false); // NEW: dedicated network error flag
 
 const actionStates = ref({
   pause: false,
@@ -74,7 +76,6 @@ const isSubscriptionActive = computed(
 const isSubscriptionPaused = computed(
   () => subscription.value?.status === "PAUSED"
 );
-// Disable the cancel button if auto-renewal is already canceled
 const isAutoRenewCancelled = computed(() => {
   return subscription.value?.autoRenew === false;
 });
@@ -98,11 +99,7 @@ const itemsRemaining = computed(() => {
 });
 
 const daysUntilRenewal = computed(() => {
-  if (!subscription.value?.periodEnd) return null;
-  const renewalDate = new Date(subscription.value.periodEnd);
-  const today = new Date();
-  const daysLeft = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-  return daysLeft > 0 ? daysLeft : 0;
+  return subscription.value?.daysLeft || null;
 });
 
 // --- Utils ---
@@ -113,6 +110,11 @@ const formatDate = (dateString) => {
     month: "short",
     day: "numeric",
   });
+};
+
+const forceRefreshSubscription = async () => {
+  await loadCurrentSubscription(false);
+  subscription.value = { ...subscription.value };
 };
 
 const formatPrice = (price) => {
@@ -150,35 +152,69 @@ const closeConfirmationModal = () => {
 const loadCurrentSubscription = async (showLoader = true) => {
   if (showLoader) isLoading.value = true;
   error.value = null;
+  errorType.value = null;
+
   try {
-    const { subscription: sub } = await getCurrentSubscription();
-    subscription.value = sub;
+    const response = await getCurrentSubscription();
+    subscription.value = response.subscription || response;
+    networkError.value = false; // Reset on success
   } catch (err) {
     console.error("Error fetching subscription:", err);
+
+    // NEW: Detect network errors
     if (
+      !navigator.onLine ||
+      err.message?.includes("Failed to fetch") ||
+      err.message?.includes("Network") ||
+      err.code === "ERR_NETWORK"
+    ) {
+      errorType.value = "network";
+      error.value =
+        "Network connection error. Please check your internet and try again.";
+      networkError.value = true;
+    }
+    // Existing: No subscription error
+    else if (
       err.message?.includes("404") ||
       err.message?.includes("No active subscription")
     ) {
-      error.value = "You do not have an active subscription.";
+      errorType.value = "noSubscription";
+      error.value = null; // Don't show error banner for new users
       subscription.value = null;
-    } else {
-      error.value = err.message || "Failed to load subscription.";
-      showError(error.value);
     }
+    // NEW: Server error
+    else if (err.status >= 500 || err.message?.includes("Server")) {
+      errorType.value = "server";
+      error.value = "Server error. Please try again later.";
+    }
+    // Fallback: Generic error
+    else {
+      errorType.value = "generic";
+      error.value = "Unable to load subscription. Please try again.";
+    }
+
+    if (error.value) showError(error.value);
   } finally {
     if (showLoader) isLoading.value = false;
   }
 };
-
 const loadAvailablePlans = async () => {
   isPlanLoading.value = true;
   try {
     const plans = await fetchUserPlans();
     availablePlans.value = plans
       .filter((p) => p.code !== currentPlanCode.value && p.active)
-      .sort((a, b) => a.price - b.price);
+      .sort((a, b) => a.price_ngn - b.price_ngn);
+    networkError.value = false; // Reset on success
   } catch (err) {
-    showError(err.message || "Failed to load plans.");
+    // NEW: Check if it's a network error
+    if (!navigator.onLine || err.message?.includes('Failed to fetch') || 
+        err.message?.includes('Network') || err.code === 'ERR_NETWORK') {
+      networkError.value = true;
+      showError('Network error. Could not load available plans.');
+    } else {
+      showError('Unable to load plans. Please try again.');
+    }
   } finally {
     isPlanLoading.value = false;
   }
@@ -188,9 +224,10 @@ const loadAvailablePlans = async () => {
 const handlePause = async () => {
   actionStates.value.pause = true;
   try {
-    const { subscription: sub } = await pauseSubscription();
-    subscription.value = sub;
+    const response = await pauseSubscription();
+    subscription.value = response.subscription || response;
     showSuccess("Subscription paused successfully.");
+    await loadCurrentSubscription(false);
   } catch (err) {
     showError(err.message || "Unable to pause subscription.");
   } finally {
@@ -202,9 +239,10 @@ const handlePause = async () => {
 const handleResume = async () => {
   actionStates.value.resume = true;
   try {
-    const { subscription: sub } = await resumeSubscription();
-    subscription.value = sub;
+    const response = await resumeSubscription();
+    subscription.value = response.subscription || response;
     showSuccess("Subscription resumed successfully.");
+    await loadCurrentSubscription(false);
   } catch (err) {
     showError(err.message || "Unable to resume subscription.");
   } finally {
@@ -235,13 +273,11 @@ const openResumeConfirm = () => {
 
 const handlePlanChange = async () => {
   showPlanChangeModal.value = true;
-  // No need to reload from API — just ensure isCurrent flag is set correctly
   availablePlans.value = availablePlans.value.map((p) => ({
     ...p,
     isCurrent: p.code === subscription.value?.plan?.code,
   }));
 };
-
 
 const closePlanChangeModal = () => {
   showPlanChangeModal.value = false;
@@ -273,7 +309,6 @@ const submitPlanChange = async () => {
           response.payment?.authorization_url ||
           response.payment?.checkoutUrl
         ) {
-          // Redirect for immediate payment if required
           window.location.href =
             response.payment.authorization_url || response.payment.checkoutUrl;
           return;
@@ -295,53 +330,73 @@ const submitPlanChange = async () => {
   );
 };
 
-const handleCancelAutoRenew = async () => {
+const handleToggleAutoRenew = async () => {
+  if (actionStates.value.cancel) return;
+
   actionStates.value.cancel = true;
   try {
     await cancelAutoPayment(subscription.value.subId, {
-      reason: "User cancelled auto-renewal",
+      reason: isAutoRenewCancelled.value
+        ? "User enabled auto-renewal"
+        : "User cancelled auto-renewal",
     });
-    // Reload subscription without showing the full loader to avoid a flash
+
+    const message = isAutoRenewCancelled.value
+      ? "Auto-renewal enabled successfully!"
+      : "Auto-renewal cancelled successfully!";
+
+    showSuccess(message);
     await loadCurrentSubscription(false);
-    showSuccess("Auto-renewal cancelled successfully!");
   } catch (err) {
-    showError(err.message || "Failed to cancel auto-renewal.");
+    console.error("Toggle auto-renew error:", err);
+
+    // If it's the "already cancelled" error, show specific message and disable the toggle
+    if (err.message?.includes("already cancelled")) {
+      showError(
+        "Auto payment already cancelled. Please contact our support to undo the cancellation."
+      );
+      // The button will remain disabled due to isAutoRenewCancelled being true
+    } else {
+      showError(err.message || "Failed to update auto-renewal status.");
+    }
+
+    await loadCurrentSubscription(false);
   } finally {
     actionStates.value.cancel = false;
-    closeConfirmationModal();
   }
-};
-
-const openCancelConfirm = () => {
-  openConfirmationModal(
-    "Cancel auto-renewal to stop future subscription charges. You can resubscribe anytime.",
-    handleCancelAutoRenew,
-    "Cancel Auto-Renewal",
-    "bg-red-600 text-white hover:bg-red-700",
-    "cancel"
-  );
 };
 
 // --- Lifecycle ---
 let refreshInterval = null;
-
 onMounted(async () => {
   await loadCurrentSubscription();
-  await loadAvailablePlans(); // ⬅ Prefetch all plans for modal
+  await loadAvailablePlans();
 
-  const justSubscribed =
-    route.query.status === "success" ||
-    route.query.reference ||
-    localStorage.getItem("subscribing") === "true";
+  // NEW: Listen for network changes
+  window.addEventListener('online', () => {
+    networkError.value = false;
+    if (subscription.value) {
+      showSuccess('Connection restored. Refreshing...');
+      forceRefreshSubscription();
+    }
+  });
+  
+  window.addEventListener('offline', () => {
+    networkError.value = true;
+    showError('Lost internet connection. Some features may be unavailable.');
+  });
+
+  const justSubscribed = route.query.status === 'success' || 
+                        route.query.reference || 
+                        localStorage.getItem('subscribing') === 'true';
 
   if (justSubscribed) {
-    showSuccess("Payment confirmed! Refreshing your subscription...");
+    showSuccess('Payment confirmed! Refreshing your subscription...');
     await loadCurrentSubscription();
-    localStorage.removeItem("subscribing");
+    localStorage.removeItem('subscribing');
     router.replace({ query: {} });
   }
 
-  // Auto-refresh every 60s
   refreshInterval = setInterval(() => {
     loadCurrentSubscription(false);
   }, 60000);
@@ -350,11 +405,12 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (refreshInterval) clearInterval(refreshInterval);
+  window.removeEventListener('online', () => {});
+  window.removeEventListener('offline', () => {});
 });
 </script>
-
 <template>
-  <section class="min-h-screen py-8 md:py-12">
+  <section class="min-h-screen py-16 md:py-12">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-8 md:mb-12">
         <h1
@@ -378,47 +434,76 @@ onUnmounted(() => {
         </GradientLoader>
       </div>
 
-      <!-- No Active Subscription -->
-      <div v-else-if="error" class="space-y-8">
-        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-xl">
+      <!-- Network Error or No Subscription -->
+      <div
+        v-else-if="error && errorType !== 'noSubscription'"
+        class="space-y-8"
+      >
+        <!-- Network Error (special styling) -->
+        <div
+          v-if="errorType === 'network'"
+          class="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-xl"
+        >
           <div class="flex items-start">
-            <div class="flex-shrink-0">
-              <font-awesome-icon
-                :icon="faTimesCircle"
-                class="w-6 h-6 text-red-500"
-              />
-            </div>
+            <font-awesome-icon
+              :icon="faWifi"
+              class="w-6 h-6 text-amber-500 mt-1"
+            />
             <div class="ml-4">
-              <h3 class="text-lg font-semibold text-red-800">
-                No Active Subscription
+              <h3 class="text-lg font-semibold text-amber-800">
+                Connection Problem
               </h3>
-              <p class="text-red-700 mt-2">{{ error }}</p>
-              <p class="text-charcoal mt-3">
-                You can subscribe to a plan below to get started.
-              </p>
+              <p class="text-amber-700 mt-2">{{ error }}</p>
+              <button
+                @click="forceRefreshSubscription"
+                class="mt-3 text-amber-700 font-semibold underline hover:text-amber-900"
+              >
+                Try Again
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Dynamically load plan page below -->
+        <!-- Server/Generic Error -->
+        <div v-else class="bg-red-50 border-l-4 border-red-500 p-6 rounded-xl">
+          <div class="flex items-start">
+            <font-awesome-icon
+              :icon="faExclamationTriangle"
+              class="w-6 h-6 text-red-500 mt-1"
+            />
+            <div class="ml-4">
+              <h3 class="text-lg font-semibold text-red-800">
+                Error Loading Subscription
+              </h3>
+              <p class="text-red-700 mt-2">{{ error }}</p>
+              <button
+                @click="forceRefreshSubscription"
+                class="mt-3 text-red-700 font-semibold underline hover:text-red-900"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Show Plans Page only for users without active subscription AND no network error -->
+      <div
+        v-else-if="
+          !subscription && !networkError && errorType === 'noSubscription'
+        "
+        class="space-y-8"
+      >
+        <!-- Existing PlansPage component -->
         <Suspense>
           <template #default>
             <PlansPage />
           </template>
           <template #fallback>
-            <div class="flex flex-col items-center justify-center py-12">
-              <div class="relative w-10 h-10 mb-4">
-                <div
-                  class="absolute inset-0 border-4 border-t-4 border-navy-blue/20 rounded-full animate-spin"
-                  style="border-top-color: var(--color-golden-brown)"
-                ></div>
-              </div>
-              <p class="text-charcoal">Loading available plans...</p>
-            </div>
+            <!-- existing fallback -->
           </template>
         </Suspense>
       </div>
-
       <!-- Active Subscription -->
       <div v-else-if="subscription" class="space-y-6">
         <div
@@ -465,44 +550,98 @@ onUnmounted(() => {
             >
               <!-- Renewal Date -->
               <div
-                class="bg-gradient-to-br from-cream to-bone-white p-5 rounded-xl border border-gray-200 hover:border-golden-brown transition-colors"
+                class="p-5 rounded-xl border transition-colors"
+                :class="{
+                  'bg-gradient-to-br from-cream to-bone-white border-gray-200 hover:border-golden-brown':
+                    !isSubscriptionPaused,
+                  'bg-gray-100 border-gray-300 text-gray-400':
+                    isSubscriptionPaused,
+                }"
               >
                 <div class="flex items-center justify-between mb-3">
                   <font-awesome-icon
                     :icon="faCalendarAlt"
-                    class="w-5 h-5 text-golden-brown"
+                    class="w-5 h-5"
+                    :class="{
+                      'text-golden-brown': !isSubscriptionPaused,
+                      'text-gray-400': isSubscriptionPaused,
+                    }"
                   />
                   <span
-                    v-if="daysUntilRenewal"
+                    v-if="daysUntilRenewal && !isSubscriptionPaused"
                     class="text-xs font-semibold text-brand-green bg-brand-green/10 px-2 py-1 rounded-full"
                   >
-                    {{ daysUntilRenewal }} days
+                    {{ daysUntilRenewal }} days left
                   </span>
                 </div>
-                <p class="text-xs text-charcoal font-medium mb-1">
+                <p
+                  class="text-xs font-medium mb-1"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
                   Renewal Date
                 </p>
-                <p class="text-lg font-bold text-navy-blue">
-                  {{ formatDate(subscription?.periodEnd) }}
+                <p
+                  class="text-lg font-bold"
+                  :class="{
+                    'text-navy-blue': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{
+                    isSubscriptionPaused
+                      ? "Paused"
+                      : formatDate(subscription?.renewalDate)
+                  }}
                 </p>
               </div>
 
               <!-- Items Remaining -->
               <div
-                class="bg-gradient-to-br from-cream to-bone-white p-5 rounded-xl border border-gray-200 hover:border-golden-brown transition-colors"
+                class="p-5 rounded-xl border transition-colors"
+                :class="{
+                  'bg-gradient-to-br from-cream to-bone-white border-gray-200 hover:border-golden-brown':
+                    !isSubscriptionPaused,
+                  'bg-gray-100 border-gray-300 text-gray-400':
+                    isSubscriptionPaused,
+                }"
               >
                 <div class="flex items-center gap-2 mb-3">
                   <font-awesome-icon
                     :icon="faBoxOpen"
-                    class="w-5 h-5 text-golden-brown"
+                    class="w-5 h-5"
+                    :class="{
+                      'text-golden-brown': !isSubscriptionPaused,
+                      'text-gray-400': isSubscriptionPaused,
+                    }"
                   />
                 </div>
-                <p class="text-xs text-charcoal font-medium mb-1">
+                <p
+                  class="text-xs font-medium mb-1"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
                   Items Remaining
                 </p>
-                <p class="text-lg font-bold text-navy-blue">
+                <p
+                  class="text-lg font-bold"
+                  :class="{
+                    'text-navy-blue': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
                   <span class="text-2xl">{{ itemsRemaining.remaining }}</span>
-                  <span class="text-xs text-golden-brown ml-1">
+                  <span
+                    class="text-xs ml-1"
+                    :class="{
+                      'text-golden-brown': !isSubscriptionPaused,
+                      'text-gray-400': isSubscriptionPaused,
+                    }"
+                  >
                     / {{ itemsRemaining.monthly }}
                   </span>
                 </p>
@@ -510,38 +649,252 @@ onUnmounted(() => {
 
               <!-- Rollover Limit -->
               <div
-                class="bg-gradient-to-br from-cream to-bone-white p-5 rounded-xl border border-gray-200 hover:border-golden-brown transition-colors"
+                class="p-5 rounded-xl border transition-colors"
+                :class="{
+                  'bg-gradient-to-br from-cream to-bone-white border-gray-200 hover:border-golden-brown':
+                    !isSubscriptionPaused,
+                  'bg-gray-100 border-gray-300 text-gray-400':
+                    isSubscriptionPaused,
+                }"
               >
                 <div class="flex items-center gap-2 mb-3">
                   <font-awesome-icon
                     :icon="faSync"
-                    class="w-5 h-5 text-golden-brown"
+                    class="w-5 h-5"
+                    :class="{
+                      'text-golden-brown': !isSubscriptionPaused,
+                      'text-gray-400': isSubscriptionPaused,
+                    }"
                   />
                 </div>
-                <p class="text-xs text-charcoal font-medium mb-1">
+                <p
+                  class="text-xs font-medium mb-1"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
                   Rollover Limit
                 </p>
-                <p class="text-lg font-bold text-navy-blue">
-                  {{ subscription.plan?.rollover_limit_items || 0 }} Items
+                <p
+                  class="text-lg font-bold"
+                  :class="{
+                    'text-navy-blue': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{
+                    isSubscriptionPaused
+                      ? "Paused"
+                      : (subscription.plan?.rolloverLimitItems || 0) + " Items"
+                  }}
                 </p>
               </div>
 
               <!-- Monthly Cost -->
               <div
-                class="bg-gradient-to-br from-cream to-bone-white p-5 rounded-xl border border-gray-200 hover:border-golden-brown transition-colors"
+                class="p-5 rounded-xl border transition-colors"
+                :class="{
+                  'bg-gradient-to-br from-cream to-bone-white border-gray-200 hover:border-golden-brown':
+                    !isSubscriptionPaused,
+                  'bg-gray-100 border-gray-300 text-gray-400':
+                    isSubscriptionPaused,
+                }"
               >
                 <div class="flex items-center gap-2 mb-3">
                   <font-awesome-icon
                     :icon="faClock"
-                    class="w-5 h-5 text-golden-brown"
+                    class="w-5 h-5"
+                    :class="{
+                      'text-golden-brown': !isSubscriptionPaused,
+                      'text-gray-400': isSubscriptionPaused,
+                    }"
                   />
                 </div>
-                <p class="text-xs text-charcoal font-medium mb-1">
+                <p
+                  class="text-xs font-medium mb-1"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
                   Monthly Cost
                 </p>
-                <p class="text-lg font-bold text-navy-blue">
-                  {{ formatPrice(subscription.plan?.price || 0) }}
+                <p
+                  class="text-lg font-bold"
+                  :class="{
+                    'text-navy-blue': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{
+                    isSubscriptionPaused
+                      ? "Paused"
+                      : formatPrice(subscription.plan?.price || 0)
+                  }}
                 </p>
+              </div>
+            </div>
+
+            <!-- Additional Plan Features -->
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 p-4 rounded-xl"
+              :class="{
+                'bg-gray-50': !isSubscriptionPaused,
+                'bg-gray-100': isSubscriptionPaused,
+              }"
+            >
+              <!-- Included Trips -->
+              <div class="flex items-center gap-3">
+                <font-awesome-icon
+                  :icon="faCheckCircle"
+                  class="w-4 h-4"
+                  :class="{
+                    'text-brand-green': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                />
+                <span
+                  class="text-sm"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{
+                    isSubscriptionPaused
+                      ? "Paused"
+                      : (subscription.plan?.includedTrips || 0) +
+                        " included trips"
+                  }}
+                </span>
+              </div>
+
+              <!-- SLA -->
+              <div class="flex items-center gap-3">
+                <font-awesome-icon
+                  :icon="faClock"
+                  class="w-4 h-4"
+                  :class="{
+                    'text-golden-brown': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                />
+                <span
+                  class="text-sm"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{
+                    isSubscriptionPaused
+                      ? "Paused"
+                      : (subscription.plan?.slaHours || 0) + "h SLA"
+                  }}
+                </span>
+              </div>
+
+              <!-- Auto Renew Toggle Switch -->
+              <div class="flex-1">
+                <div
+                  class="flex items-center justify-between px-4 py-3 rounded-xl border transition-colors"
+                  :class="{
+                    'border-gray-300 bg-white hover:bg-gray-50':
+                      !isAutoRenewCancelled && !isSubscriptionPaused,
+                    'border-gray-300 bg-gray-100 cursor-not-allowed':
+                      isAutoRenewCancelled || isSubscriptionPaused,
+                    'opacity-60': isSubscriptionPaused,
+                  }"
+                >
+                  <div class="flex items-center gap-3">
+                    <div>
+                      <p
+                        class="text-sm font-bold"
+                        :class="
+                          isAutoRenewCancelled
+                            ? 'text-gray-500'
+                            : 'text-charcoal'
+                        "
+                      >
+                        Auto-Renew
+                      </p>
+                      <p
+                        class="text-xs"
+                        :class="
+                          isAutoRenewCancelled
+                            ? 'text-gray-400'
+                            : 'text-gray-500'
+                        "
+                      >
+                        {{ isAutoRenewCancelled ? "Cancelled" : "Enabled" }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Toggle Switch Button -->
+                  <button
+                    @click="handleToggleAutoRenew"
+                    :disabled="
+                      isAutoRenewCancelled ||
+                      actionStates.cancel ||
+                      isSubscriptionPaused
+                    "
+                    class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    :class="
+                      isAutoRenewCancelled
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-brand-green hover:bg-brand-green/80'
+                    "
+                  >
+                    <span
+                      class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md"
+                      :class="
+                        isAutoRenewCancelled ? 'translate-x-1' : 'translate-x-7'
+                      "
+                    />
+                    <font-awesome-icon
+                      v-if="actionStates.cancel"
+                      :icon="faSpinner"
+                      class="absolute w-3 h-3 animate-spin"
+                      :class="
+                        isAutoRenewCancelled
+                          ? 'text-gray-600 left-1.5'
+                          : 'text-white left-5'
+                      "
+                    />
+                  </button>
+                </div>
+
+                <!-- Feedback Message (shown only when auto-renew is cancelled) -->
+                <div
+                  v-if="isAutoRenewCancelled"
+                  class="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                >
+                  ⓘ Auto payment already cancelled. Please contact our support
+                  to undo the cancellation.
+                </div>
+              </div>
+
+              <!-- Upgrade -->
+              <div class="flex items-center gap-3">
+                <font-awesome-icon
+                  :icon="faExchangeAlt"
+                  class="w-4 h-4"
+                  :class="{
+                    'text-navy-blue': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                />
+                <span
+                  class="text-sm"
+                  :class="{
+                    'text-charcoal': !isSubscriptionPaused,
+                    'text-gray-400': isSubscriptionPaused,
+                  }"
+                >
+                  {{ isSubscriptionPaused ? "Paused" : "Upgrade Available" }}
+                </span>
               </div>
             </div>
 
@@ -560,7 +913,7 @@ onUnmounted(() => {
                 class="flex-1 py-3 px-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
                 :class="
                   isSubscriptionActive
-                    ? 'bg-golden-brown/10 text-golden-brown hover:bg-golden-brown hover:text-navy-blue border border-golden-brown hover:border-golden-brown'
+                    ? 'bg-golden-brown/10 text-golden-brown  hover:text-white border border-golden-brown hover:border-golden-brown'
                     : 'bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white border border-brand-green hover:border-brand-green'
                 "
               >
@@ -598,29 +951,7 @@ onUnmounted(() => {
                 class="flex-1 py-3 px-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed bg-navy-blue text-white hover:bg-charcoal border border-navy-blue hover:border-charcoal"
               >
                 <font-awesome-icon :icon="faExchangeAlt" class="w-4 h-4" />
-                <span>Change Plan</span>
-              </button>
-
-              <!-- Cancel Auto-Renew -->
-              <button
-                @click="openCancelConfirm"
-                :disabled="actionStates.cancel || isAutoRenewCancelled"
-                class="flex-1 py-3 px-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 border border-red-300 hover:border-red-600 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <font-awesome-icon
-                  :icon="actionStates.cancel ? faSpinner : faTimesCircle"
-                  :class="{ 'animate-spin': actionStates.cancel }"
-                  class="w-4 h-4"
-                />
-                <span>
-                  {{
-                    isAutoRenewCancelled
-                      ? "Auto-Renew Cancelled"
-                      : actionStates.cancel
-                      ? "Cancelling..."
-                      : "Cancel Auto-Renew"
-                  }}
-                </span>
+                <span>Upgrade</span>
               </button>
             </div>
           </div>
@@ -661,12 +992,6 @@ onUnmounted(() => {
             Change Your Plan
           </h3>
         </div>
-        <button
-          @click="closePlanChangeModal"
-          class="text-white hover:text-golden-brown transition-colors"
-        >
-          <font-awesome-icon :icon="faTimesCircle" class="w-6 h-6" />
-        </button>
       </div>
 
       <!-- Modal Body -->
@@ -683,9 +1008,17 @@ onUnmounted(() => {
                 {{ subscription.plan.name }}
               </p>
               <p class="text-charcoal text-sm mt-1">
-                {{ subscription.plan.monthly_items }} items/month •
+                {{ subscription.plan.monthlyItems }} items/month •
                 {{ formatPrice(subscription.plan.price) }}
               </p>
+              <!-- Additional plan details -->
+              <div class="flex flex-wrap gap-4 mt-2 text-xs text-charcoal">
+                <span>{{ subscription.plan.includedTrips }} trips</span>
+                <span>{{ subscription.plan.slaHours }}h SLA</span>
+                <span
+                  >Rollover: {{ subscription.plan.rolloverLimitItems }}</span
+                >
+              </div>
             </div>
             <font-awesome-icon
               :icon="faCheckCircle"
@@ -709,35 +1042,110 @@ onUnmounted(() => {
           <p class="text-charcoal">Loading available plans...</p>
         </div>
 
-        <div v-else>
+        <div v-else class="space-y-4">
           <div
             v-for="plan in availablePlans"
             :key="plan.code"
-            class="w-full p-4 md:p-6 rounded-xl border-2 mb-3"
+            @click="newPlanCode = plan.code"
+            class="w-full p-4 md:p-6 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md"
             :class="
-              plan.isCurrent
+              newPlanCode === plan.code
+                ? 'border-brand-green bg-brand-green/5'
+                : plan.isCurrent
                 ? 'border-golden-brown bg-cream'
-                : 'border-gray-200 bg-white hover:border-golden-brown transition-all'
+                : 'border-gray-200 bg-white hover:border-golden-brown'
             "
           >
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-lg font-bold text-navy-blue">{{ plan.name }}</p>
-                <p class="text-sm text-charcoal">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <p class="text-lg font-bold text-navy-blue">
+                    {{ plan.name }}
+                  </p>
+                  <span
+                    v-if="plan.isCurrent"
+                    class="text-xs bg-brand-green text-white px-2 py-1 rounded-full"
+                  >
+                    Current
+                  </span>
+                  <span
+                    v-if="newPlanCode === plan.code"
+                    class="text-xs bg-navy-blue text-white px-2 py-1 rounded-full"
+                  >
+                    Selected
+                  </span>
+                </div>
+                <p class="text-sm text-charcoal mb-2">
                   {{ plan.monthly_items }} items/month •
                   {{ formatPrice(plan.price_ngn) }}
                 </p>
 
-                
+                <!-- Plan Features -->
+                <div class="flex flex-wrap gap-3 text-xs text-charcoal mt-2">
+                  <span class="flex items-center gap-1">
+                    <font-awesome-icon :icon="faBoxOpen" class="w-3 h-3" />
+                    {{ plan.included_trips }} trips
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <font-awesome-icon :icon="faClock" class="w-3 h-3" />
+                    {{ plan.sla_hours }}h SLA
+                  </span>
+                  <span
+                    v-if="plan.discount_pct"
+                    class="flex items-center gap-1 text-brand-green"
+                  >
+                    <font-awesome-icon :icon="faArrowRight" class="w-3 h-3" />
+                    {{ plan.discount_pct }}% off
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <font-awesome-icon :icon="faSync" class="w-3 h-3" />
+                    Rollover: {{ plan.rollover_limit_items }}
+                  </span>
+                </div>
               </div>
-              <div v-if="plan.isCurrent">
-                <font-awesome-icon
-                  :icon="faCheckCircle"
-                  class="w-5 h-5 text-brand-green"
-                />
+
+              <div class="flex items-center gap-2 ml-4">
+                <div
+                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                  :class="
+                    newPlanCode === plan.code
+                      ? 'border-brand-green bg-brand-green'
+                      : 'border-gray-300'
+                  "
+                >
+                  <font-awesome-icon
+                    v-if="newPlanCode === plan.code"
+                    :icon="faCheckCircle"
+                    class="w-3 h-3 text-white"
+                  />
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Plan Change Action -->
+        <div class="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+          <button
+            @click="closePlanChangeModal"
+            class="flex-1 py-3 px-4 rounded-xl font-bold border border-gray-300 text-charcoal hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            @click="submitPlanChange"
+            :disabled="!newPlanCode || actionStates.planChange"
+            class="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-navy-blue text-white hover:bg-charcoal disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <font-awesome-icon
+              :icon="actionStates.planChange ? faSpinner : faExchangeAlt"
+              :class="{ 'animate-spin': actionStates.planChange }"
+              class="w-4 h-4"
+            />
+            <span>
+              {{ actionStates.planChange ? "Processing..." : "Change Plan" }}
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -802,6 +1210,9 @@ onUnmounted(() => {
 .bg-brand-green {
   background-color: #27b8a7;
 }
+.bg-brand-green\/5 {
+  background-color: rgba(39, 184, 167, 0.05);
+}
 .bg-brand-green\/10 {
   background-color: rgba(39, 184, 167, 0.1);
 }
@@ -846,6 +1257,12 @@ onUnmounted(() => {
 }
 .bg-bone-white {
   background-color: var(--color-bone-white, #f6f4f1);
+}
+
+/* Pause button hover text color */
+.bg-golden-brown:hover .text-golden-brown,
+.bg-golden-brown\/10:hover .text-golden-brown {
+  color: white;
 }
 
 /* Standard Tailwind overrides */

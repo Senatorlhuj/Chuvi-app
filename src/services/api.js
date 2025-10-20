@@ -409,7 +409,7 @@ export async function adminGetAllNotifications(queryString = '') {
 export async function markAdminNotificationAsRead(notificationId) {
     if (!notificationId) throw new Error('Notification ID is required');
     // ✅ CORRECTION: Changed to 'admin/notifications' and removed the double 'api/'
-    return authorizedFetch(`admin/notifications/${notificationId}/read`, { 
+    return authorizedFetch(`admin/notifications/${Id}/read`, { 
         method: 'PATCH'
     });
 }

@@ -1,29 +1,52 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Bricolage Grotesque", sans-serif;
+  /* Core Brand Colors */
   --color-navy-blue: #00022e;
   --color-golden-brown: #996515;
   --color-charcoal: #302e2d;
   --color-pure-gold: #e5b80b;
   --color-cream: #fdfbd4;
   --color-bone-white: #f6f4f1;
+
+  /* Complementary & Accent Colors */
+  --color-deep-burgundy: #4a0e0e; /* elegant, adds warmth */
+  --color-forest-green: #1b3a2a; /* rich earthy tone */
+  --color-slate-blue: #374785; /* modern cool accent */
+  --color-muted-teal: #3b6b70; /* calming contrast */
+  --color-warm-gray: #7d7461; /* neutral balance tone */
+
+  /* Light Variants */
+  --color-light-gold: #f4d86a; /* for hover or highlight */
+  --color-soft-cream: #fff9e6; /* background alternative */
+  --color-pale-gray: #e0ddd8; /* subtle divider or card bg */
+
+  /* Dark Variants */
+  --color-deep-charcoal: #1a1918; /* text or deep background */
+  --color-midnight-blue: #0a043c; /* darker tone of navy */
+  --color-dark-olive: #4b4728; /* complements golden brown */
+
+  /* Accent Highlights */
+  --color-burnished-gold: #cfae41; /* premium accent */
+  --color-copper: #b87333; /* warm metallic tone */
+  --color-ivory: #faf8ef; /* soft text on dark bg */
 }
+
 ::selection {
-  background-color: #996515; 
-  color: #f6f4f1; 
+  background-color: #996515;
+  color: #f6f4f1;
 }
 
 ::-moz-selection {
-  background-color: #996515; 
-  color: #f6f4f1; 
+  background-color: #996515;
+  color: #f6f4f1;
 }
 
-::marker{
+::marker {
   background-color: #996515;
   color: #996515;
 }
 
-button{
+button {
   cursor: pointer;
 }

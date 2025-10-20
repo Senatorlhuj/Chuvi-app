@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gradient-to-br from-bone-white via-cream/30 to-bone-white overflow-hidden">
+  <div class="flex h-screen  overflow-hidden">
     <!-- Sidebar - Stretches full height -->
     <UserSidebar
       :is-open="isSidebarOpen"

@@ -143,6 +143,7 @@
                   anambraLgas.map((lga) => ({ label: lga, value: lga }))
                 "
                 label="Pickup LGA"
+                label-text-color="text-charcoal"
                 placeholder="Select LGA *"
                 widthClass="w-full sm:w-auto flex-1"
                 required
@@ -408,6 +409,31 @@
         </div>
       </aside>
     </div>
+    <!-- Modal -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 flex items-center justify-center z-50"
+    >
+      <!-- Transparent background -->
+      <div
+        class="absolute inset-0 bg-[rgba(0,0,0,0.4)] backdrop-blur-sm"
+        @click="closeModal"
+      ></div>
+
+      <!-- Modal content -->
+      <div
+        class="relative z-10 bg-bone-white rounded-2xl shadow-xl p-6 w-11/12 max-w-sm text-center border border-golden-brown/40"
+      >
+        <h2 class="text-lg font-semibold text-navy-blue mb-3">Notice</h2>
+        <p class="text-charcoal mb-6">{{ modalMessage }}</p>
+        <button
+          @click="closeModal"
+          class="px-6 py-2 rounded-lg bg-golden-brown text-bone-white font-semibold hover:bg-golden-brown/90 transition"
+        >
+          OK
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -454,6 +480,10 @@ const user = ref({ fullName: "", phone: "", addresses: [] });
 const userLoaded = ref(false);
 const useCurrentAddress = ref(false);
 
+// --- Modal state ---
+const showModal = ref(false);
+const modalMessage = ref("");
+
 onMounted(async () => {
   try {
     const res = await fetchUserProfile();
@@ -471,6 +501,12 @@ const flatpickrOptions = {
   altFormat: "F j, Y",
   dateFormat: "Y-m-d",
   minDate: "today",
+  disable: [
+    function (date) {
+      // Disable Sundays
+      return date.getDay() === 0;
+    },
+  ],
 };
 
 // Pickup and delivery refs
@@ -571,7 +607,33 @@ const syncDeliveryAddress = () => {
     deliveryState.value = pickupState.value;
     deliveryLandmark.value = pickupLandmark.value;
     deliveryZone.value = pickupZone.value;
+    deliveryDate.value = pickupDate.value;
+    deliveryWindow.value = pickupWindow.value;
   }
+};
+
+watch(
+  [
+    pickupLine1,
+    pickupLine2,
+    pickupCity,
+    pickupLga,
+    pickupLandmark,
+    pickupZone,
+    pickupDate,
+    pickupWindow,
+  ],
+  () => {
+    if (sameAsPickup.value) syncDeliveryAddress();
+  }
+);
+
+const openModal = (msg) => {
+  modalMessage.value = msg;
+  showModal.value = true;
+};
+const closeModal = () => {
+  showModal.value = false;
 };
 
 // Validate form
@@ -580,18 +642,62 @@ const isFormValid = computed(
     pickupDate.value &&
     pickupCity.value &&
     pickupLga.value &&
+    pickupLine1.value && // ensure pickup address exists
     deliveryDate.value &&
     (sameAsPickup.value ||
       (deliveryCity.value && deliveryLga.value && deliveryLine1.value))
 );
 
-// Proceed to summary
 const proceedToSummary = async () => {
   if (!isFormValid.value) {
     alert("Please complete all required fields");
     return;
   }
 
+  // ✅ Helper to validate time strings like "9AM - 12PM"
+  const isValidTimeWindow = (timeWindow) => {
+    const regex =
+      /(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\s*-\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i;
+    const match = timeWindow.match(regex);
+    if (!match) return false;
+
+    const toMinutes = (h, m, ampm) => {
+      let hours = parseInt(h);
+      let minutes = m ? parseInt(m) : 0;
+      if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
+      if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+
+    const start = toMinutes(match[1], match[2], match[3]);
+    const end = toMinutes(match[4], match[5], match[6]);
+
+    const earliest = toMinutes(8, 0, "AM"); // 8:00 AM
+    const latest = toMinutes(6, 0, "PM"); // 6:00 PM
+
+    return start >= earliest && end <= latest && start < end;
+  };
+
+  if (!isFormValid.value) {
+    openModal("Please complete all required fields");
+    return;
+  }
+
+  if (!isValidTimeWindow(pickupWindow.value)) {
+    openModal(
+      "Invalid pickup time. Please choose a window between 8 AM and 6 PM."
+    );
+    return;
+  }
+
+  if (!isValidTimeWindow(deliveryWindow.value)) {
+    openModal(
+      "Invalid delivery time. Please choose a window between 8 AM and 6 PM."
+    );
+    return;
+  }
+
+  // ✅ If everything is valid, proceed
   orderPayload.value.pickup = {
     date: pickupDate.value,
     window: pickupWindow.value,
@@ -623,7 +729,6 @@ const proceedToSummary = async () => {
   orderPayload.value.couponCode = couponCode.value || null;
   orderPayload.value.photos = photoFiles.value;
 
-  // ✅ Ensure reactivity is fully applied before routing
   await nextTick();
   router.push({ name: "OrderSummary" });
 };
@@ -632,5 +737,17 @@ const proceedToSummary = async () => {
 <style scoped>
 textarea {
   resize: none;
+}
+
+.fixed[inset-0] {
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>

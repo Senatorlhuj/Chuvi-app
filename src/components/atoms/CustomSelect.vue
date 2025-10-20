@@ -1,18 +1,15 @@
 <template>
   <div class="space-y-1">
-    <!-- Label -->
     <label
       v-if="label"
       :for="id"
-      class="text-sm font-medium text-cream/70 block transition-colors duration-200"
+      :class="labelClasses"
     >
       {{ label }}
       <span v-if="required" class="text-red-400 ml-1">*</span>
     </label>
 
-    <!-- Custom Select Dropdown -->
     <div class="relative inline-block" ref="selectWrapper">
-      <!-- Selected Value Display -->
       <button
         type="button"
         :id="id"
@@ -24,20 +21,20 @@
         @keydown.up.prevent="navigateOptions(-1)"
         :disabled="disabled"
         :class="[
-          'appearance-none block p-3 bg-bone-white border border-golden-brown/30 rounded-lg text-left font-medium transition-all duration-300 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+          'appearance-none block p-3 bg-bone-white border rounded-lg text-left font-medium transition-all duration-300 pr-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
           isOpen ? 'border-golden-brown text-navy-blue' : 'text-charcoal',
+          error ? 'border-red-500' : 'border-golden-brown/30',
           widthClass,
         ]"
       >
         <span v-if="selectedOption" class="block truncate">
           {{ selectedOption.label }}
         </span>
-        <span v-else class="block truncate">
+        <span v-else class="block truncate text-charcoal/70">
           {{ placeholder }}
         </span>
       </button>
 
-      <!-- Dropdown Arrow Icon with Animation -->
       <div
         class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-navy-blue transition-all duration-300"
         :class="{ 'rotate-180 text-golden-brown': isOpen }"
@@ -58,7 +55,6 @@
         </svg>
       </div>
 
-      <!-- Dropdown Options List -->
       <transition
         enter-active-class="transition duration-200 ease-out"
         enter-from-class="opacity-0 -translate-y-2"
@@ -69,7 +65,7 @@
       >
         <div
           v-if="isOpen"
-          class="absolute z-50 mt-2 bg-bone-white rounded-lg max-h-60 overflow-auto"
+          class="absolute z-50 mt-2 bg-bone-white rounded-lg max-h-60 overflow-auto shadow-xl border border-golden-brown/20"
           :class="widthClass"
         >
           <ul>
@@ -86,7 +82,6 @@
             >
               <div class="flex items-center justify-between">
                 <span class="block truncate">{{ option.label }}</span>
-                <!-- Checkmark for selected option -->
                 <svg
                   v-if="modelValue === option.value"
                   class="h-5 w-5 text-golden-brown"
@@ -108,8 +103,11 @@
       </transition>
     </div>
 
-    <!-- Helper Text -->
-    <p v-if="helperText" class="text-xs mt-1 transition-opacity duration-200">
+    <p
+      v-if="helperText"
+      class="text-xs mt-1 transition-opacity duration-200"
+      :class="error ? 'text-red-500' : 'text-cream/80'"
+    >
       {{ helperText }}
     </p>
   </div>
@@ -154,10 +152,19 @@ const props = defineProps({
     type: String,
     default: null,
   },
-
+  error: {
+    type: Boolean,
+    default: false,
+  },
   widthClass: {
     type: String,
     default: "w-48",
+  },
+  // NEW PROP for external control of the default label text color
+  labelTextColor: {
+    type: String,
+    // Use the original default color as a fallback
+    default: "text-cream/70", 
   },
 });
 
@@ -176,6 +183,33 @@ const id = computed(
 const selectedOption = computed(() => {
   return props.options.find((option) => option.value === props.modelValue);
 });
+
+// Computed classes for the label's text color
+const labelClasses = computed(() => {
+  // Base classes for size, weight, transition, and default behavior
+  const baseClasses =
+    "text-sm font-medium block transition-colors duration-200 cursor-default";
+
+  // Start with the color passed in via the new prop
+  let colorClass = props.labelTextColor; 
+
+  // Dynamic states override the default prop color
+  if (props.disabled) {
+    colorClass = "text-navy-blue/50"; // Disabled state color
+  } else if (props.error) {
+    colorClass = "text-red-500"; // Error state color
+  } else if (isOpen.value) {
+    colorClass = "text-pure-gold"; // Focus/Active color
+  } else if (props.modelValue) {
+      // Option to change color when filled, keeping it 'text-charcoal' 
+      // is a common pattern to signify a selected state.
+      colorClass = 'text-charcoal'; 
+  }
+
+  // Combine the base classes with the dynamic color class
+  return [baseClasses, colorClass];
+});
+
 
 const toggleDropdown = () => {
   if (props.disabled) return;
@@ -246,12 +280,13 @@ onUnmounted(() => {
   background: transparent;
 }
 
+/* Using a custom color based on your theme for the scrollbar thumb */
 .overflow-auto::-webkit-scrollbar-thumb {
-  background: rgba(0, 47, 108, 0.3);
+  background: rgba(0, 2, 46, 0.3); /* navy-blue at 30% opacity */
   border-radius: 4px;
 }
 
 .overflow-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 47, 108, 0.5);
+  background: rgba(0, 2, 46, 0.5); /* navy-blue at 50% opacity */
 }
 </style>

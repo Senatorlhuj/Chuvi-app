@@ -1,11 +1,11 @@
 <template>
-  <div class="p-4 sm:p-6 lg:p-10 min-h-screen">
+  <div class="px-4 py-18 sm:p-6 lg:p-10 min-h-screen">
     <!-- Header -->
     <h1
       class="text-3xl sm:text-4xl font-display font-bold mb-8 text-navy-blue flex items-center"
     >
       <svg
-        class="w-8 h-8 mr-3 text-pure-gold"
+        class="w-8 h-8 mr-3 text-pure-gold hidden md:block"
         fill="currentColor"
         viewBox="0 0 20 20"
         xmlns="http://www.w3.org/2000/svg"
@@ -347,39 +347,134 @@ const selectedAddOns = ref({});
 const subscriptionValid = ref(true);
 const subscriptionError = ref("");
 
-
 // --- Real Subscription Check ---
+const isSubscriptionValid = (subscription) => {
+  // Check if subscription object exists and has required properties
+  if (!subscription || typeof subscription !== "object") {
+    return false;
+  }
+
+  const now = new Date();
+  const periodEnd = subscription.periodEnd
+    ? new Date(subscription.periodEnd)
+    : null;
+
+  // Check: Status is ACTIVE (with fallback)
+  if (subscription.status !== "ACTIVE") return false;
+
+  // Check: Subscription hasn't expired (only if periodEnd exists)
+  if (periodEnd && now > periodEnd) return false;
+
+  // Check: Has items remaining (with fallback for undefined)
+  if (
+    typeof subscription.itemsRemaining === "number" &&
+    subscription.itemsRemaining <= 0
+  )
+    return false;
+
+  // Check: Days left is positive (with fallback for undefined)
+  if (typeof subscription.daysLeft === "number" && subscription.daysLeft <= 0)
+    return false;
+
+  return true;
+};
 const checkUserSubscription = async () => {
-  // Always ensure we have the latest user info
-  await loadUser();
+  try {
+    // Always ensure we have the latest user info
+    await loadUser();
 
-  const hasActiveSub =
-    user.value?.subscription &&
-    (user.value.subscription.status === "ACTIVE" ||
-      user.value.subscription.active === true);
-
-  if (orderPayload.value.pricingModel === "SUBSCRIPTION") {
-    if (!hasActiveSub) {
-      subscriptionValid.value = false;
-      subscriptionError.value =
-        "You don’t have an active subscription. Switch to Retail or activate a plan to continue.";
-    } else {
+    // If pricing model is not SUBSCRIPTION, no validation needed
+    if (orderPayload.value.pricingModel !== "SUBSCRIPTION") {
       subscriptionValid.value = true;
       subscriptionError.value = "";
+      return;
     }
-  } else {
+
+    // User doesn't have currentSubscription ID
+    if (!user.value?.currentSubscription) {
+      subscriptionValid.value = false;
+      subscriptionError.value =
+        "No subscription found. Please activate a plan to use subscription pricing.";
+      return;
+    }
+
+    let subscription;
+    try {
+      const response = await authorizedFetch(`/api/subscriptions/current`, {
+        method: "GET",
+      });
+
+      // FIX: Access the subscription from the correct property
+      subscription = response.data?.subscription || response.subscription;
+
+      console.log("Full API response:", response); // Debug log
+      console.log("Subscription data:", subscription); // Debug log
+
+      // If subscription is still undefined or null, throw error
+      if (!subscription) {
+        throw new Error("No subscription data received from API");
+      }
+    } catch (error) {
+      console.error("Failed to fetch subscription:", error);
+      subscriptionValid.value = false;
+      subscriptionError.value =
+        "Unable to verify subscription. Please try again.";
+      return;
+    }
+
+    // Validate subscription (add null check first)
+    if (!subscription || !isSubscriptionValid(subscription)) {
+      subscriptionValid.value = false;
+
+      // If no subscription data at all
+      if (!subscription) {
+        subscriptionError.value = "No active subscription found.";
+        return;
+      }
+
+      // Provide specific error messages
+      if (subscription.status !== "ACTIVE") {
+        subscriptionError.value = `Your subscription is ${
+          subscription.status || "inactive"
+        }. Please activate it to continue.`;
+      } else if (new Date() > new Date(subscription.periodEnd)) {
+        subscriptionError.value = `Your subscription expired on ${new Date(
+          subscription.periodEnd
+        ).toLocaleDateString()}. Please renew to continue.`;
+      } else if (subscription.itemsRemaining <= 0) {
+        subscriptionError.value = `You've used all items in your current plan (${subscription.itemsRemaining} remaining). Please upgrade or wait for renewal.`;
+      } else if (subscription.daysLeft <= 0) {
+        subscriptionError.value = `Your subscription has expired. Please renew to continue.`;
+      } else {
+        subscriptionError.value =
+          "Your subscription is invalid. Please contact support.";
+      }
+      return;
+    }
+
+    // Subscription is valid
     subscriptionValid.value = true;
     subscriptionError.value = "";
+  } catch (error) {
+    console.error("Subscription check error:", error);
+    subscriptionValid.value = false;
+    subscriptionError.value =
+      "Error checking subscription. Please refresh and try again.";
   }
 };
-
-
-
 // Watch pricing model changes to check subscription status
 watch(
   () => orderPayload.value.pricingModel,
-  () => {
-    checkUserSubscription();
+  async () => {
+    await checkUserSubscription();
+  }
+);
+watch(
+  () => user.value?.currentSubscription,
+  async () => {
+    if (orderPayload.value.pricingModel === "SUBSCRIPTION") {
+      await checkUserSubscription();
+    }
   }
 );
 
@@ -483,8 +578,8 @@ watch(
   { deep: true }
 );
 
-onMounted(() => {
+onMounted(async () => {
   fetchServices();
-  checkUserSubscription();
+  await checkUserSubscription();
 });
 </script>

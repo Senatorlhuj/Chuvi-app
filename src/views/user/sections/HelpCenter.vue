@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 md:p-8" style="background-color: #F5F1ED;">
+  <div class="min-h-screen p-4 md:p-8" >
     <div class="max-w-5xl mx-auto">
       <!-- Back Button -->
       <button
@@ -13,7 +13,7 @@
 
       <!-- Hero Section -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold mb-3" style="color: #1A3A52;">
+        <h1 class="text-4xl md:text-5xl text-navy-blue font-bold mb-3" >
           Help Center
         </h1>
         <p class="text-lg" style="color: #6B7280;">

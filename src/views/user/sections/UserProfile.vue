@@ -1,32 +1,33 @@
 <template>
-  <div class="min-h-screen text-charcoal font-display pb-20 mt-10">
+  <div class="min-h-screen text-charcoal font-display pb-20 mt-12 md:mt-10">
     <header
-      class="max-w-6xl mx-auto border-b border-gray-200 bg-white/70 backdrop-blur-md p-4 md:p-6 flex flex-col md:flex-row justify-between items-center"
+      class="w-full mx-auto border-b border-gray-200 bg-white/70 backdrop-blur-md p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center"
     >
-      <h1 class="text-3xl md:text-4xl font-bold text-charcoal">My Profile</h1>
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal text-center sm:text-left">My Profile</h1>
       <button
         @click="handleUpdateProfile"
         :disabled="isUpdatingProfile"
-        class="mt-3 md:mt-0 flex items-center space-x-2 px-5 py-2 bg-golden-brown text-bone-white rounded-md hover:bg-navy-blue transition disabled:opacity-50 shadow cursor-pointer"
+        class="mt-3 sm:mt-0 w-full sm:w-auto flex items-center justify-center space-x-2 px-4 sm:px-5 py-2 bg-golden-brown text-bone-white rounded-md hover:bg-navy-blue transition disabled:opacity-50 shadow cursor-pointer"
       >
         <font-awesome-icon :icon="['fas', 'save']" />
         <span>{{ isUpdatingProfile ? "Saving..." : "Save All Changes" }}</span>
       </button>
     </header>
 
-    <main class="p-4 md:p-8 max-w-6xl mx-auto grid gap-8">
+    <main class="p-4 md:p-8 max-w-6xl mx-auto grid gap-6 md:gap-8">
+      <!-- Profile Section -->
       <section
-        class="bg-white rounded-2xl border border-golden-brown/30 p-6 flex flex-col md:flex-row items-center gap-10"
+        class="bg-white rounded-2xl border border-golden-brown/30 p-4 sm:p-6 flex flex-col md:flex-row items-center gap-6 md:gap-10"
       >
         <div class="relative bg-charcoal/30 rounded-full">
           <img
             :src="photoUrl"
             alt="Profile"
-            class="w-32 h-32 rounded-full object-cover"
+            class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover"
           />
 
           <button
-            class="absolute bottom-0 right-0 bg-charcoal text-bone-white p-2 rounded-full hover:bg-golden-brown transition cursor-pointer"
+            class="absolute bottom-0 right-0 bg-charcoal text-bone-white p-1.5 sm:p-2 rounded-full hover:bg-golden-brown transition cursor-pointer"
             @click="triggerPhotoUpload"
             :title="isUploadingPhoto ? 'Uploading...' : 'Upload new photo'"
             :disabled="isUploadingPhoto"
@@ -34,6 +35,7 @@
             <font-awesome-icon
               :icon="isUploadingPhoto ? ['fas', 'spinner'] : ['fas', 'pen']"
               :spin="isUploadingPhoto"
+              class="text-sm sm:text-base"
             />
           </button>
           <input
@@ -47,7 +49,7 @@
         </div>
 
         <div class="flex-1 grid gap-3 w-full">
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <ProfileField
               label="Full Name:"
               v-model:value="form.fullName"
@@ -56,7 +58,7 @@
             <ProfileField label="Email:" :value="form.email" />
           </div>
 
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <ProfileField label="Phone:" v-model:value="form.phone" editable />
             <ProfileField label="Gender:" :value="form.gender" />
           </div>
@@ -64,7 +66,7 @@
           <div class="flex flex-wrap gap-3 mt-4">
             <button
               @click="showPasswordModal = true"
-              class="flex items-center space-x-2 px-4 py-2 bg-navy-blue text-bone-white rounded-md hover:bg-charcoal transition cursor-pointer"
+              class="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2 bg-navy-blue text-bone-white rounded-md hover:bg-charcoal transition cursor-pointer"
             >
               <font-awesome-icon :icon="['fas', 'key']" />
               <span>Change Password</span>
@@ -73,9 +75,10 @@
         </div>
       </section>
 
-      <section class="bg-charcoal rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold text-cream flex items-center gap-2">
+      <!-- Membership Section -->
+      <section class="bg-charcoal rounded-2xl p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <h2 class="text-xl sm:text-2xl font-bold text-cream flex items-center gap-2">
             <font-awesome-icon :icon="['fas', 'crown']" />
             Membership
           </h2>
@@ -83,7 +86,7 @@
             :class="
               profile?.isMember ? 'text-brand-green' : 'text-golden-brown'
             "
-            class="font-semibold"
+            class="font-semibold text-center sm:text-left"
           >
             {{ profile?.isMember ? "Active" : "Inactive" }}
           </span>
@@ -98,7 +101,7 @@
           v-if="profile?.isMember"
           @click="handleLeaveMembership"
           :disabled="isLeaving"
-          class="px-4 py-2 bg-destructive text-white rounded-md hover:bg-charcoal transition disabled:opacity-50 cursor-pointer"
+          class="w-full sm:w-auto px-4 py-2 bg-destructive text-white rounded-md hover:bg-charcoal transition disabled:opacity-50 cursor-pointer"
         >
           <font-awesome-icon :icon="['fas', 'times-circle']" class="mr-2" />
           {{ isLeaving ? "Cancelling..." : "Cancel Membership" }}
@@ -107,24 +110,25 @@
           v-else
           @click="handleJoinMembership"
           :disabled="isJoining"
-          class="px-4 py-2 bg-brand-green text-white rounded-md hover:bg-navy-blue transition disabled:opacity-50 cursor-pointer"
+          class="w-full sm:w-auto px-4 py-2 bg-brand-green text-white rounded-md hover:bg-navy-blue transition disabled:opacity-50 cursor-pointer"
         >
           <font-awesome-icon :icon="['fas', 'user-plus']" class="mr-2" />
           {{ isJoining ? "Joining..." : "Join Membership" }}
         </button>
       </section>
 
-      <section class="bg-white rounded-2xl border border-golden-brown/30 p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-navy-blue flex items-center gap-2">
+      <!-- Address Section -->
+      <section class="bg-white rounded-2xl border border-golden-brown/30 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+          <h2 class="text-xl sm:text-2xl font-bold text-navy-blue flex items-center gap-2">
             <font-awesome-icon :icon="['fas', 'map-marker-alt']" />
             Manage Address
           </h2>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <button
               v-if="addresses.length > 0"
               @click="showAddresses = !showAddresses"
-              class="flex items-center gap-2 px-3 py-2 border border-navy-blue text-navy-blue rounded-md hover:bg-navy-blue hover:text-white transition cursor-pointer"
+              class="flex items-center justify-center gap-2 px-3 py-2 border border-navy-blue text-navy-blue rounded-md hover:bg-navy-blue hover:text-white transition cursor-pointer"
             >
               <font-awesome-icon
                 :icon="showAddresses ? ['fas', 'eye-slash'] : ['fas', 'eye']"
@@ -133,7 +137,7 @@
             </button>
             <button
               @click="openAddAddressModal"
-              class="flex items-center gap-2 border-2 border-dashed border-golden-brown text-golden-brown px-3 py-2 rounded-md hover:bg-golden-brown hover:text-bone-white transition cursor-pointer"
+              class="flex items-center justify-center gap-2 border-2 border-dashed border-golden-brown text-golden-brown px-3 py-2 rounded-md hover:bg-golden-brown hover:text-bone-white transition cursor-pointer"
             >
               <font-awesome-icon :icon="['fas', 'plus']" />
               Add New Address
@@ -156,29 +160,28 @@
           <div
             v-for="addr in addresses"
             :key="addr._id"
-            class="py-4 flex justify-between items-start gap-3"
+            class="py-4 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3"
           >
             <div class="flex items-start gap-3">
               <font-awesome-icon
                 :icon="['fas', 'location-dot']"
                 class="text-golden-brown mt-1"
               />
-              <div>
+              <div class="flex-1">
                 <p class="font-semibold text-navy-blue">{{ addr.label }}</p>
-                <p class="text-sm text-gray-500 mb-2">
+                <p class="text-sm text-gray-500 mb-1">
                   <span>Address 1:</span> {{ addr.line1 }}
                 </p>
-                <p class="text-sm text-gray-500 mb-2">
-                  <span>Address 2:</span>
-                  {{ addr.line2 ? ", " + addr.line2 : "" }}
+                <p v-if="addr.line2" class="text-sm text-gray-500 mb-1">
+                  <span>Address 2:</span> {{ addr.line2 }}
                 </p>
-                <p class="text-sm text-gray-500 mb-2">
+                <p class="text-sm text-gray-500 mb-1">
                   <span>City:</span> {{ addr.city }}
                 </p>
-                <p class="text-sm text-gray-500 mb-2">
+                <p class="text-sm text-gray-500 mb-1">
                   <span>LGA: </span> {{ addr.lga }}
                 </p>
-                <p class="text-sm text-gray-500 mb-2">
+                <p class="text-sm text-gray-500 mb-1">
                   <span>State: </span> {{ addr.state }}
                 </p>
                 <p v-if="addr.landmark" class="text-sm text-gray-400 italic">
@@ -187,7 +190,7 @@
               </div>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-2 mt-2 sm:mt-0 self-end sm:self-auto">
               <button
                 @click="startEditing(addr)"
                 class="text-navy-blue hover:text-golden-brown transition cursor-pointer"
@@ -207,14 +210,15 @@
         </div>
       </section>
 
-      <section class="bg-white rounded-2xl border border-golden-brown/30 p-6">
+      <!-- Preferences Section -->
+      <section class="bg-white rounded-2xl border border-golden-brown/30 p-4 sm:p-6">
         <h2
-          class="text-2xl font-bold mb-4 text-navy-blue flex items-center gap-2"
+          class="text-xl sm:text-2xl font-bold mb-4 text-navy-blue flex items-center gap-2"
         >
           <font-awesome-icon :icon="['fas', 'sliders-h']" /> Laundry Preferences
         </h2>
         <form @submit.prevent="savePreferences" class="grid gap-5">
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-semibold text-navy-blue block mb-1"
                 >Detergent</label
@@ -264,7 +268,7 @@
             <button
               type="submit"
               :disabled="isSavingPreferences"
-              class="px-6 py-2 bg-navy-blue text-bone-white rounded-md hover:bg-golden-brown transition disabled:opacity-50 cursor-pointer"
+              class="w-full sm:w-auto px-6 py-2 bg-navy-blue text-bone-white rounded-md hover:bg-golden-brown transition disabled:opacity-50 cursor-pointer"
             >
               {{ isSavingPreferences ? "Saving..." : "Save Preferences" }}
             </button>
@@ -272,11 +276,12 @@
         </form>
       </section>
 
+      <!-- Referral Section -->
       <section
-        class="bg-white rounded-2xl border border-golden-brown/30 p-6 text-center"
+        class="bg-white rounded-2xl border border-golden-brown/30 p-4 sm:p-6 text-center"
       >
         <h2
-          class="text-2xl font-bold mb-4 text-navy-blue flex justify-center items-center gap-2"
+          class="text-xl sm:text-2xl font-bold mb-4 text-navy-blue flex justify-center items-center gap-2"
         >
           <font-awesome-icon :icon="['fas', 'gift']" /> Invite Friends
         </h2>
@@ -286,38 +291,40 @@
           :size="160"
           class="mx-auto mb-4"
         />
-        <p v-if="referralCode" class="font-mono text-lg text-golden-brown mb-3">
+        <p v-if="referralCode" class="font-mono text-lg text-golden-brown mb-3 break-all">
           {{ referralCode }}
         </p>
         <div
           v-if="referralCode && referralLink"
-          class="flex justify-center gap-3"
+          class="flex flex-col sm:flex-row justify-center gap-3"
         >
           <button
             @click="copyToClipboard(referralCode)"
-            class="px-4 py-2 bg-golden-brown text-white rounded-md hover:bg-navy-blue transition cursor-pointer"
+            class="w-full sm:w-auto px-4 py-2 bg-golden-brown text-white rounded-md hover:bg-navy-blue transition cursor-pointer"
           >
             <font-awesome-icon :icon="['fas', 'copy']" /> Copy Code
           </button>
           <button
             @click="copyToClipboard(referralLink)"
-            class="px-4 py-2 bg-navy-blue text-white rounded-md hover:bg-golden-brown transition cursor-pointer"
+            class="w-full sm:w-auto px-4 py-2 bg-navy-blue text-white rounded-md hover:bg-golden-brown transition cursor-pointer"
           >
             <font-awesome-icon :icon="['fas', 'link']" /> Copy Link
           </button>
         </div>
         <p v-else class="text-gray-500">Loading referral information...</p>
       </section>
+      
     </main>
 
+    <!-- Address Modal -->
     <div
       v-if="showAddressModal"
       class="fixed inset-0 flex items-center justify-center z-50 p-4 modal-backdrop"
     >
       <div
-        class="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
       >
-        <h3 class="text-xl font-bold mb-4 text-navy-blue">
+        <h3 class="text-lg sm:text-xl font-bold mb-4 text-navy-blue">
           {{ editingAddress ? "Edit Address" : "Add New Address" }}
         </h3>
         <form @submit.prevent="handleSaveAddress" class="grid gap-4">
@@ -367,7 +374,7 @@
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="text-sm font-semibold block mb-1">City *</label>
               <input
@@ -399,7 +406,7 @@
             />
           </div>
 
-          <div class="flex gap-3 mt-4">
+          <div class="flex flex-col sm:flex-row gap-3 mt-4">
             <button
               type="submit"
               :disabled="isSavingAddress"
@@ -419,12 +426,13 @@
       </div>
     </div>
 
+    <!-- Password Modal -->
     <div
       v-if="showPasswordModal"
       class="fixed inset-0 flex items-center justify-center z-50 p-4 modal-backdrop"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md w-full">
-        <h3 class="text-xl font-bold mb-4 text-navy-blue">New Password</h3>
+      <div class="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
+        <h3 class="text-lg sm:text-xl font-bold mb-4 text-navy-blue">New Password</h3>
         <p class="text-sm mb-4 text-charcoal">
           Your new password must be different from previously used passwords.
         </p>
@@ -490,7 +498,7 @@
             </button>
           </div>
 
-          <div class="flex gap-3 mt-4">
+          <div class="flex flex-col sm:flex-row gap-3 mt-4">
             <button
               type="submit"
               :disabled="isChangingPassword"
@@ -510,11 +518,12 @@
       </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteConfirm"
       class="fixed inset-0 flex items-center justify-center z-50 p-4 modal-backdrop"
     >
-      <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+      <div class="bg-white rounded-lg p-4 sm:p-6 w-full max-w-sm text-center">
         <h3 class="text-lg font-semibold mb-3 text-navy-blue">
           Delete Address?
         </h3>
@@ -522,7 +531,7 @@
           Are you sure you want to delete this address? This action cannot be
           undone.
         </p>
-        <div class="flex justify-center gap-3">
+        <div class="flex flex-col sm:flex-row justify-center gap-3">
           <button
             @click="confirmDeleteAddress"
             class="px-4 py-2 bg-destructive text-white rounded-md hover:bg-red-700 transition cursor-pointer"
